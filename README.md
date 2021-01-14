@@ -89,6 +89,10 @@ The [whole issue](https://github.com/adw96/DivNet/issues/32) is worth reading.
 
 If you have small enough datasets that the [R implemntation of DivNet](https://github.com/adw96/DivNet) can handle them, just use that instead...it will let you estimate the network structure of your data!
 
+### Bootstrapping
+
+Only the parametric bootstrap is available.  You cannot do the nonparametric bootstrap.
+
 ## License
 
 Dual-licensed to be compatible with the Rust project.
