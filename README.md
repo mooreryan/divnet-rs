@@ -103,7 +103,7 @@ this:
 
 ## Usage
 
-See the `./docs` (TODO) directory included in this repository for information on
+See the `./docs` directory included in this repository for information on
 how to run `divnet-rs`, how to get your data from R (and possibly phyloseq) into
 a format that `divnet-rs` can handle, and how to get your data *back* into R so
 you can get on with your research!

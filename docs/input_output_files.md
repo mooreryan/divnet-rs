@@ -4,7 +4,7 @@ There are scripts to help you generate the input files for `divnet-rs` from R.
 I recommend using them rather than making input files by hand!  There are also
 scripts to help you re-import the output of `divnet-rs` back into R.
 
-- [ ] TODO upload the helper scripts.
+You can find them in this repository in the `scripts` folder.  They aren't the nicest R scripts you've ever seen, but they should help you to get started!
 
 ## Input files
 
@@ -36,10 +36,6 @@ of `taxa`.
 
 The values are counts, so they should be positive integers only.
 
-- [ ] TODO check if spaces in names are allowed.
-- [ ] TODO check if names have to be unique.
-- [ ] TODO check if it works with relative abundances.
-
 ### Sample data
 
 The sample data file is a little weird looking, I will admit.  It is basically
@@ -59,8 +55,6 @@ s1,1
 s2,0
 s3,0
 ```
-
-- [ ] TODO can you include continuous variables or just categorical data?
 
 #### Another example
 
@@ -123,5 +117,3 @@ replicate,sample,t1,t2,t3,t4,t5
 
 Again, not all that nice for human consumption, but it will be nice and easy to
 parse in R.  Check out the helper scripts for that!
-
-- [ ] TODO upload helper scripts.
