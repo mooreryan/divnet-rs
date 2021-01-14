@@ -4,4 +4,8 @@ There are a couple of examples to help you get started in the [test_files](https
 
 Check out how the config files and the input files look!
 
-There are also some [example scripts](TODO) for getting data out of R and into `divnet-rs` as well as for getting data from `divnet-rs` back in to R.
+## Lee data comparison
+
+For a comparison of the Lee dataset example given in the DivNet docs see [lee_data/lee.md](./lee_data/lee.md).
+
+The `lee_data` directory also contains some R scripts that you can use as a starting point for getting your data out of R and in to `divnet-rs`, as well as getting the results back in to R.

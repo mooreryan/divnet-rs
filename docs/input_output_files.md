@@ -1,10 +1,10 @@
 # Input & Output Files
 
-There are scripts to help you generate the input files for `divnet-rs` from R. 
+There are some example scripts to help you generate the input files for `divnet-rs` from R. 
 I recommend using them rather than making input files by hand!  There are also
 scripts to help you re-import the output of `divnet-rs` back into R.
 
-You can find them in this repository in the `scripts` folder.  They aren't the nicest R scripts you've ever seen, but they should help you to get started!
+You can find them in this repository in the `./docs/lee_data` folder.  They aren't the nicest R scripts you've ever seen, but they should help you to get started!
 
 ## Input files
 
@@ -116,4 +116,4 @@ replicate,sample,t1,t2,t3,t4,t5
 ```
 
 Again, not all that nice for human consumption, but it will be nice and easy to
-parse in R.  Check out the helper scripts for that!
+parse in R.  Check out the scripts in the `lee_data` folder for an example of this!

@@ -1,0 +1,17 @@
+[model]
+em_iter = 6
+em_burn = 3
+mc_iter = 500
+mc_burn = 250
+stepsize = 0.01
+perturbation = 0.05
+replicates = 5
+base_taxa = 0
+
+[io]
+count_table = "./docs/lee_data/lee_phylum_count_table.csv"
+sample_data = "./docs/lee_data/lee_phylum_sample_data.csv"
+output = "./docs/lee_data/lee_phylum_divnet_rs_output.csv"
+
+[misc]
+parallel_replicates = false
