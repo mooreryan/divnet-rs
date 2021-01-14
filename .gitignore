@@ -1,0 +1,9 @@
+.RData
+.Rhistory
+.idea
+
+/_*
+/benches
+/target
+
+/test_files/*/*output.csv

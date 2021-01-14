@@ -1,0 +1,17 @@
+[model]
+em_iter = 4
+em_burn = 2
+mc_iter = 300
+mc_burn = 150
+stepsize = 0.01
+perturbation = 0.05
+replicates = 5
+base_taxa = 0
+
+[io]
+count_table = "./test_files/lee/lee_top_1000_count_table.csv"
+sample_data = "./test_files/lee/lee_sample_data.csv"
+output = "./test_files/lee/lee_top_1000_divnet_output.csv"
+
+[misc]
+parallel_replicates = false
