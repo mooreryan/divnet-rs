@@ -36,8 +36,7 @@ I will get these for you shortly :)
 `divnet-rs` is written in [Rust](https://www.rust-lang.org/).  If you do not
 have Rust, you must [install it first](https://www.rust-lang.org/tools/install).
 
-There are two options.  You can either follow the master branch (recommended
-only if you want to do development) or download a tagged release.
+There are two options.  You can either follow the master branch (not recommended for most people) or download a tagged release (recommended).
 
 If you want to track the master branch, clone the git repository like so:
 
@@ -45,12 +44,8 @@ If you want to track the master branch, clone the git repository like so:
 git clone https://github.com/mooreryan/divnet-rs.git
 ```
 
-I recommend you to download a
-[release](https://github.com/mooreryan/divnet-rs/releases) however.
-
-```
-TODO
-```
+However, I recommend that you download a
+[release](https://github.com/mooreryan/divnet-rs/releases) as they are versioned.
 
 Once you have the source code, `cd` in to the root of the source directoy and
 run `cargo` to compile the program.  Here is an example:
