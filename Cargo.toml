@@ -1,6 +1,6 @@
 [package]
 name = "divnet-rs"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Ryan Moore <moorer@udel.com>"]
 edition = "2018"
 
