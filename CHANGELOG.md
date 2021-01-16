@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+- Updated CHANGELOG.md.
+
 ## [0.1.1] -- 2020-01-16
 
 ### Added 
@@ -17,6 +19,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - When compiling, `divnet-rs` now uses the system installed OpenBLAS library rather that using the one bundled with `openblas-src`.
+
+### Fixed
+
+- The eigenvector test failed on certain machines because the sign of the eigenvectors is arbitrary.  This has been fixed.
 
 ## [0.1.0] -- 2021-01-14
 
