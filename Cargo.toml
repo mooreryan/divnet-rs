@@ -14,7 +14,7 @@ chrono = "0.4.11"
 env_logger = "0.8.2"
 lapack = "0.16"
 log = "0.4.0"
-openblas-src = "0.9"
+openblas-src = { version = "0.9.0", default-features = false, features = ["system"] }
 rand = "0.7.3"
 rand_distr = "0.2.2"
 rayon = "1.3.0"
