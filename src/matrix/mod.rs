@@ -1654,6 +1654,7 @@ mod tests {
         .unwrap();
 
         let actual = unsafe { a.eigen().unwrap() };
+        // TODO this may fail as it can also be *-1.
         let expected = EigenOutput {
             values: vec![0.06141744, 0.24687849, 3.69170407],
             vectors: Matrix::from_data(
@@ -1677,12 +1678,25 @@ mod tests {
             .unwrap(),
         };
 
-        approx::assert_abs_diff_eq!(&actual.values[..], &expected.values[..], epsilon = TOL);
-        approx::assert_abs_diff_eq!(
-            actual.vectors.data(),
-            expected.vectors.data(),
-            epsilon = TOL
+        let opposite_expected_values = EigenOutput {
+            values: vec![0.06141744, 0.24687849, 3.69170407],
+            vectors: expected.vectors.ewise_map(|x| -x),
+        };
+
+        // TODO start here ryan
+        assert!(
+            actual.vectors.approx_eq(&expected.vectors, TOL)
+                || actual
+                    .vectors
+                    .approx_eq(&opposite_expected_values.vectors, TOL)
         );
+
+        approx::assert_abs_diff_eq!(&actual.values[..], &expected.values[..], epsilon = TOL);
+        // approx::assert_abs_diff_eq!(
+        //     actual.vectors.data(),
+        //     expected.vectors.data(),
+        //     epsilon = TOL
+        // );
     }
 
     #[test]
