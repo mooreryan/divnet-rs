@@ -1,15 +1,15 @@
 # Input & Output Files
 
-There are some example scripts to help you generate the input files for `divnet-rs` from R. 
-I recommend using them rather than making input files by hand!  There are also
+There are some example scripts to help you generate the input files for `divnet-rs` from R.
+I recommend using them rather than making input files by hand! There are also
 scripts to help you re-import the output of `divnet-rs` back into R.
 
-You can find them in this repository in the `./docs/lee_data` folder.  They aren't the nicest R scripts you've ever seen, but they should help you to get started!
+You can find them in this repository in the `./docs/lee_data` folder. They aren't the nicest R scripts you've ever seen, but they should help you to get started!
 
 ## Input files
 
-The `divnet-rs` program takes two input files:  a count table and a file with
-sample data.  Both should be CSV files.
+The `divnet-rs` program takes two input files: a count table and a file with
+sample data. Both should be CSV files.
 
 ### Count table
 
@@ -28,7 +28,7 @@ t5,2,220,215
 ```
 
 This data set has five taxa (`t1`, `t2`, `t3`, `t4`, `t5`) and three samples
-(`s1`, `s2`, `s3`).  Note that these can be named whatever you want.
+(`s1`, `s2`, `s3`). Note that these can be named whatever you want.
 
 The `taxa` specifier is ignored and so you can write whatever you want there.
 E.g., if you have amplicon sequence variants, you could put `asv` there instead
@@ -38,16 +38,18 @@ The values are counts, so they should be positive integers only.
 
 ### Sample data
 
-The sample data file is a little weird looking, I will admit.  It is basically
-the output of the R function `model.matrix`.  It converts your dummy variables
+The sample data file is a little weird looking, I will admit. It is basically
+the output of the R function `model.matrix`. It converts your dummy variables
 to 0 and 1.
 
-#### A simple example 
+_**Important note**: the order of the samples in the sample data file has to match with the order of the samples in the count table file. This is not ideal, but currently that's how it works :/_
 
-In this case, there is only one covariate: `snazzy`.  Here, I have labeled it as
+#### A simple example
+
+In this case, there is only one covariate: `snazzy`. Here, I have labeled it as
 `snazzyyes` indicating that samples with a `1` are snazzy (i.e., positive for
 condition `snazzy`) and samples with a `0` are not snazzy (negative for
-condition `snazzy`).  So `s1` is snazzy, but `s2` and `s3` are NOT snazzy.
+condition `snazzy`). So `s1` is snazzy, but `s2` and `s3` are NOT snazzy.
 
 ```csv
 sample,snazzyyes
@@ -69,7 +71,7 @@ R10,0,0,1,0
 R11,0,0,1,0
 ```
 
-As you can see, the variable of interest is `char`.  It has the following
+As you can see, the variable of interest is `char`. It has the following
 columns:
 
 - `charbiofilm` (`1` for yes, it's a biofilm sample, `0` for no it is not)
@@ -77,15 +79,14 @@ columns:
 - `charglassy` (`1` for yes, it's a glassy sample, `0` for no it is not)
 - `charwater` (`1` for yes, it's a water sample, `0` for no it is not)
 
-Now the Lee data has a fifth category, `alered`.  It is not listed here as that
-is the way the `model.matrix` dummy encoding works.  You don't need a column for
+Now the Lee data has a fifth category, `alered`. It is not listed here as that
+is the way the `model.matrix` dummy encoding works. You don't need a column for
 it, (and if you do include it in your dummy encoding things can get wonky) any
 sample with a `0` in all the colunms is an `altered` sample.
 
 ## Output files
 
-Here is the output file you get if you run the example files in `<source
-root>/test_files/small`.  (The little ones you see above!)
+Here is the output file you get if you run the example files in `<source root>/test_files/small`. (The little ones you see above!)
 
 ```csv
 # this is replicate 0
@@ -116,4 +117,4 @@ replicate,sample,t1,t2,t3,t4,t5
 ```
 
 Again, not all that nice for human consumption, but it will be nice and easy to
-parse in R.  Check out the scripts in the `lee_data` folder for an example of this!
+parse in R. Check out the scripts in the `lee_data` folder for an example of this!
