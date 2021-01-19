@@ -6,7 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added 
+
+- Makefile for testing the Lee phylum dataset during development.
+
+### Changed
+
 - Updated CHANGELOG.md.
+- Updated docs to describe seeding.
+- Users must now specify a seed for the random number generator in the config files.
+- Switch to the ChaCha20 rng rather than `thread_rng()`
 
 ## [0.1.1] -- 2020-01-16
 
