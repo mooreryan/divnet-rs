@@ -53,20 +53,16 @@ sample_data = "./test_files/small/small_sample_data.csv"
 output = "./test_files/small/small_divnet_output.csv"
 
 [misc]
-# If true, then do the replicates in parallel with rayon.  As of now, you should
-# probably just leave this as false.  On my four core test macine, setting it to
-# true saves a BIT of walltime at the expense of double the CPU time.
-parallel_replicates = false
+# An unsigned 64 bit integer used to seed the random number generator.
+random_seed = 0
 ```
 
 As you can see it is broken up in to three sections (model, io, and misc) each
 controlling a different aspect of the software.  The `[model]` section contains
 config options for the actual model DivNet uses to estimate diversity.  The
 `[io]` section deals with specifying input and output files.  Finally, the
-`[misc]` section contains any random options that don't fit in any other
-category.  Currently the only option in this category is `parallel_replicates`. 
-Note that while this sounds cool, it actually gives worse performance right now,
-so you should just always set it to false as you see above.
+`[misc]` section contains any options that don't fit in any other
+category.
 
 ## Defaults
 
@@ -78,7 +74,7 @@ differ from the defaults, but as of now, you will have to be explicit :)
 That said, DivNet does have some defaults for the tuning of the algorithm.  Here
 is how you would set up the `[model]` section to use the defaults.
 
-One interesting thing is that `divnet-rs` is *MUCH* faster than the R
+Note that `divnet-rs` is ~20x faster than the R
 implementation.  This means that depending on the size of your dataset, you
 could crank `em_*`, `mc_*`, and `replicates` options up really high and see what
 happens.  I haven't really tried this out yet, but it might be interesting!

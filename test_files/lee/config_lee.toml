@@ -14,4 +14,4 @@ sample_data = "./test_files/lee/lee_sample_data.csv"
 output = "./test_files/lee/lee_divnet_output.csv"
 
 [misc]
-parallel_replicates = false
+random_seed = 0

@@ -14,4 +14,4 @@ sample_data = "./test_files/wide/wide_sample_data.csv"
 output = "./test_files/wide/wide_divnet_output.csv"
 
 [misc]
-parallel_replicates = false
+random_seed = 0

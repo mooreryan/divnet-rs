@@ -14,4 +14,4 @@ sample_data = "./docs/lee_data/lee_phylum_sample_data.csv"
 output = "./docs/lee_data/lee_phylum_divnet_rs_output.csv"
 
 [misc]
-parallel_replicates = false
+random_seed = 0
