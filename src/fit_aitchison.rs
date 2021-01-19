@@ -33,7 +33,13 @@ pub struct FitAitchsonResult {
 // TODO it seems like a pretty high proportion of acceptance...should it be?
 
 /// output should be same dim as fitted_y
-fn make_w(fitted_y: &Matrix, sigma: &Matrix, sample_sums: &[f64], base_taxa: usize) -> Matrix {
+fn make_w<R: Rng>(
+    rng: &mut R,
+    fitted_y: &Matrix,
+    sigma: &Matrix,
+    sample_sums: &[f64],
+    base_taxa: usize,
+) -> Matrix {
     let makew_start = SystemTime::now();
 
     // sigma.ncols() -> NT-1
@@ -75,7 +81,7 @@ fn make_w(fitted_y: &Matrix, sigma: &Matrix, sample_sums: &[f64], base_taxa: usi
             let probs = compositions.col(sample_idx);
 
             // Each draw specifies a taxa to sample.
-            let draws = multinomial::multinomial(1, sample_sum, &probs);
+            let draws = multinomial::multinomial(rng, 1, sample_sum, &probs);
 
             for taxa_idx in 0..draws.len() {
                 let old_val = bootstrap_counts.get_unchecked(taxa_idx, sample_idx);
@@ -90,7 +96,8 @@ fn make_w(fitted_y: &Matrix, sigma: &Matrix, sample_sums: &[f64], base_taxa: usi
     bootstrap_counts
 }
 
-pub fn parametric_bootstrap(
+pub fn parametric_bootstrap<R: Rng>(
+    rng: &mut R,
     fitted_y: &Matrix,
     sigma: &Matrix,
     W: &Matrix,
@@ -109,7 +116,7 @@ pub fn parametric_bootstrap(
     //let mw = make_w(&fitted_y, &sigma, sample_sums);
 
     log::debug!("Starting `make_w`");
-    let mw = make_w(&fitted_y, &sigma, &sample_sums, config.base_taxa);
+    let mw = make_w(rng, &fitted_y, &sigma, &sample_sums, config.base_taxa);
 
     let res = fit_aitchison(&mw, &X, &config);
 

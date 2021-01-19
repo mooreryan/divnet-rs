@@ -1,7 +1,7 @@
 use rand::distributions::WeightedIndex;
 use rand::prelude::*;
 
-pub fn multinomial(_n: usize, size: usize, probs: &[f64]) -> Vec<f64> {
+pub fn multinomial<R: Rng>(mut rng: &mut R, _n: usize, size: usize, probs: &[f64]) -> Vec<f64> {
     let prob_sum = probs.iter().sum::<f64>();
 
     approx::assert_abs_diff_eq!(prob_sum, 1., epsilon = 1e-6);
@@ -20,8 +20,6 @@ pub fn multinomial(_n: usize, size: usize, probs: &[f64]) -> Vec<f64> {
     let weights: Vec<usize> = probs.iter().map(|&x| (x / min).round() as usize).collect();
 
     let dist = WeightedIndex::new(&weights).unwrap();
-
-    let mut rng = thread_rng();
 
     for _ in 0..size {
         let i = dist.sample(&mut rng);
@@ -46,7 +44,10 @@ mod tests {
         // Do a lot of draws to get the accuracy up.
         let size = 100_000 as usize;
 
-        let draws = multinomial(1, size, &probs);
+        // Todo change this to a seeded rng to test the output.
+        let mut rng = thread_rng();
+
+        let draws = multinomial(&mut rng, 1, size, &probs);
 
         let actual_probs: Vec<f64> = draws.iter().map(|&count| count / size as f64).collect();
 
