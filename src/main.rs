@@ -10,7 +10,8 @@ use divnet_rs::fit_aitchison::parametric_bootstrap;
 use divnet_rs::io;
 use divnet_rs::opts::Opts;
 use env_logger::Env;
-use rand::thread_rng;
+use rand::SeedableRng;
+use rand_chacha::ChaCha20Rng;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use structopt::StructOpt;
@@ -28,7 +29,7 @@ fn main() {
     debug!("config: {:?}", &config);
 
     // Todo switch to seedable rng
-    let mut rng = thread_rng();
+    let mut rng = ChaCha20Rng::seed_from_u64(1);
 
     let (sample_names, taxa_names, otu_table) = io::read_otu_table(&config.io.count_table);
     let (sample_names2, _variable_names, sample_data) =
@@ -45,7 +46,7 @@ fn main() {
     let mut outf = BufWriter::new(outf);
 
     info!("Running fit_aitchison");
-    let fa_result = fit_aitchison::fit_aitchison(&otu_table, &sample_data, &config.model);
+    let fa_result = fit_aitchison::fit_aitchison(&mut rng, &otu_table, &sample_data, &config.model);
 
     writeln!(&mut outf, "# this is replicate 0").unwrap();
 

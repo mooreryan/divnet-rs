@@ -87,7 +87,8 @@ fn standard_normal<R: Rng>(rng: &mut R, n: usize) -> Vec<f64> {
 mod tests {
     use super::*;
     use approx;
-    use rand::thread_rng;
+    use rand::SeedableRng;
+    use rand_chacha::ChaCha20Rng;
     use std::f64;
 
     // TODO this test could give some false positives depending on the random numbers generated!
@@ -97,8 +98,7 @@ mod tests {
         let sigma =
             Matrix::from_data(2, 2, vec![0.5165287, -0.2067872, -0.2067872, 2.5308647]).unwrap();
 
-        // Todo use seedable rng
-        let mut rng = thread_rng();
+        let mut rng = ChaCha20Rng::seed_from_u64(1);
 
         // Need a lot of samples to get near the originals.
         let result = mvrnorm(&mut rng, 10000, &mu, &sigma);

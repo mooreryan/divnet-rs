@@ -7,7 +7,7 @@ use crate::multinomial;
 use crate::mvrnorm::mvrnorm;
 use blas::dsyrk;
 use rand::distributions::Uniform;
-use rand::prelude::*;
+use rand::Rng;
 use rand_distr::{Distribution, Normal};
 use std::process;
 use std::time::SystemTime;
@@ -118,7 +118,7 @@ pub fn parametric_bootstrap<R: Rng>(
     log::debug!("Starting `make_w`");
     let mw = make_w(rng, &fitted_y, &sigma, &sample_sums, config.base_taxa);
 
-    let res = fit_aitchison(&mw, &X, &config);
+    let res = fit_aitchison(rng, &mw, &X, &config);
 
     log::debug!(
         "parametric_bootstrap took {:?}",
@@ -161,7 +161,7 @@ fn _get_Yi<'a>(sample_j: usize, mci: usize, Y: &'a Matrix, Yi_MH: &'a Matrix) ->
     }
 }
 
-fn make_Yi_star(Yi: &[f64], normal: &Normal<f64>, mut rng: &mut ThreadRng) -> Vec<f64> {
+fn make_Yi_star<R: Rng>(Yi: &[f64], normal: &Normal<f64>, mut rng: &mut R) -> Vec<f64> {
     Yi.iter().map(|&x| x + normal.sample(&mut rng)).collect()
 }
 
@@ -275,8 +275,8 @@ fn get_acceptance(Eq5pt1: f64, Eq5pt2: f64, Eq5pt3: f64, Eq5pt4: f64) -> f64 {
     }
 }
 
-// TOOD original DivNet code checks acceptance for NaN.
-fn is_accepted(acceptance: f64, uniform: &Uniform<f64>, mut rng: &mut ThreadRng) -> bool {
+// todo original DivNet code checks acceptance for NaN.
+fn is_accepted<R: Rng>(acceptance: f64, uniform: &Uniform<f64>, mut rng: &mut R) -> bool {
     uniform.sample(&mut rng) < acceptance
 }
 
@@ -321,7 +321,8 @@ fn make_mc_iter_lr_container(size: usize, nsamples: usize, ntaxa: usize) -> Vec<
 /// `eY` expected logratios (NT-1 x NS)
 /// `sigma` (NT-1 x NT-1)
 /// `config` configuration values for the function!
-fn mcmat(
+fn mcmat<R: Rng>(
+    mut rng: &mut R,
     Y: &Matrix,
     W: &Matrix,
     eY: &Matrix,
@@ -339,7 +340,6 @@ fn mcmat(
     let normal = Normal::new(0.0, config.stepsize).unwrap();
     // Technically, this excludes 1.
     let uniform = Uniform::from(0.0..1.0);
-    let mut rng = rand::thread_rng();
 
     // Note, this little hack works because the diagonal network is just the entries on the
     // diagonal.  So we can treat it like elementwise operations later.
@@ -809,7 +809,8 @@ fn get_beta0(fa_tmp: &FitAitTmp, config: &FitAitchisonConfig) -> Vec<f64> {
 }
 
 /// TODO does not validate the values in `config`
-pub fn fit_aitchison(
+pub fn fit_aitchison<R: Rng>(
+    rng: &mut R,
     counts: &Matrix,
     covariates: &Matrix,
     config: &FitAitchisonConfig,
@@ -895,8 +896,14 @@ pub fn fit_aitchison(
         log::info!("Starting EM iteration {} of {}", em + 1, config.em_iter);
 
         log::trace!("Running `mcmat`");
-        let (Yi_MH_container, mc_iter_logratios) =
-            mcmat(&logratios, &counts, &expected_logratios, &sigma, &config);
+        let (Yi_MH_container, mc_iter_logratios) = mcmat(
+            rng,
+            &logratios,
+            &counts,
+            &expected_logratios,
+            &sigma,
+            &config,
+        );
 
         log::trace!("Running `make_Y_new`");
         // Estimated logrations from this round of MCiters
@@ -1005,6 +1012,8 @@ pub fn fit_aitchison(
 mod tests {
     use super::*;
     use approx;
+    use rand::SeedableRng;
+    use rand_chacha::ChaCha20Rng;
     use std::f64;
 
     const TOL: f64 = 1e-5;
@@ -1035,7 +1044,8 @@ mod tests {
             base_taxa: 0,
         };
 
-        let result = fit_aitchison(&count_table, &sample_data, &config);
+        let mut rng = ChaCha20Rng::seed_from_u64(1);
+        let result = fit_aitchison(&mut rng, &count_table, &sample_data, &config);
 
         let expected = vec![0.33, 0.33, 0.33, 0.33, 0.33, 0.33, 0.33, 0.33, 0.33];
 
@@ -1069,7 +1079,8 @@ mod tests {
             base_taxa: 0,
         };
 
-        let result = fit_aitchison(&count_table, &sample_data, &config);
+        let mut rng = ChaCha20Rng::seed_from_u64(1);
+        let result = fit_aitchison(&mut rng, &count_table, &sample_data, &config);
 
         let expected = vec![
             0.33, 0.33, 0.33, 0., 0., 0., 0.33, 0.33, 0.33, 0., 0., 0., 0., 0., 0., 0.33, 0.33,
