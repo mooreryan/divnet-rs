@@ -1,12 +1,12 @@
 use crate::matrix::Matrix;
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use rand_distr::StandardNormal;
 use std::process;
 
 // ~18% C.E.
 /// Result will be mu.len() X num_observations Array2.  Remember it's stored in Col major, so it may
 /// or may not be optimal.
-pub fn mvrnorm(num_observations: usize, mu: &[f64], sigma: &Matrix) -> Matrix {
+pub fn mvrnorm<R: Rng>(rng: &mut R, num_observations: usize, mu: &[f64], sigma: &Matrix) -> Matrix {
     let num_variables = mu.len();
 
     if sigma.dim() != (num_variables, num_variables) {
@@ -22,7 +22,7 @@ pub fn mvrnorm(num_observations: usize, mu: &[f64], sigma: &Matrix) -> Matrix {
     let normal_values = Matrix::from_data(
         num_variables,
         num_observations,
-        standard_normal(num_variables * num_observations),
+        standard_normal(rng, num_variables * num_observations),
     )
     .unwrap();
 
@@ -79,16 +79,15 @@ pub fn mvrnorm(num_observations: usize, mu: &[f64], sigma: &Matrix) -> Matrix {
     result.transpose()
 }
 
-fn standard_normal(n: usize) -> Vec<f64> {
-    (0..n)
-        .map(|_i| thread_rng().sample(StandardNormal))
-        .collect()
+fn standard_normal<R: Rng>(rng: &mut R, n: usize) -> Vec<f64> {
+    (0..n).map(|_i| rng.sample(StandardNormal)).collect()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use approx;
+    use rand::thread_rng;
     use std::f64;
 
     // TODO this test could give some false positives depending on the random numbers generated!
@@ -98,8 +97,11 @@ mod tests {
         let sigma =
             Matrix::from_data(2, 2, vec![0.5165287, -0.2067872, -0.2067872, 2.5308647]).unwrap();
 
+        // Todo use seedable rng
+        let mut rng = thread_rng();
+
         // Need a lot of samples to get near the originals.
-        let result = mvrnorm(10000, &mu, &sigma);
+        let result = mvrnorm(&mut rng, 10000, &mu, &sigma);
 
         let colmeans: Vec<f64> = (0..result.ncols())
             .map(|j| result.col(j).iter().sum::<f64>() / result.nrows() as f64)

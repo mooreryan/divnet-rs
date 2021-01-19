@@ -59,7 +59,7 @@ fn make_w<R: Rng>(
         let sample = fitted_y.col(sample_idx);
         // will be 1 x num_taxa
 
-        let norm_vals = mvrnorm(1, &sample, &sigma);
+        let norm_vals = mvrnorm(rng, 1, &sample, &sigma);
 
         assert_eq!((1, num_taxa - 1), norm_vals.dim());
 
