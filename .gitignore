@@ -7,3 +7,4 @@
 /target
 
 /test_files/*/*output.csv
+/test_files/*/*plot.png
