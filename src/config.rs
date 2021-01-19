@@ -29,5 +29,5 @@ pub struct IoConfig {
 
 #[derive(Deserialize, Debug)]
 pub struct MiscConfig {
-    pub parallel_replicates: bool,
+    pub random_seed: u64,
 }

@@ -29,7 +29,7 @@ fn main() {
     debug!("config: {:?}", &config);
 
     // Todo switch to seedable rng
-    let mut rng = ChaCha20Rng::seed_from_u64(1);
+    let mut rng = ChaCha20Rng::seed_from_u64(config.misc.random_seed);
 
     let (sample_names, taxa_names, otu_table) = io::read_otu_table(&config.io.count_table);
     let (sample_names2, _variable_names, sample_data) =
