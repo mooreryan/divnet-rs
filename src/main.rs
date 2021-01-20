@@ -28,6 +28,15 @@ fn main() {
 
     debug!("config: {:?}", &config);
 
+    // TODO move these into the read_config function.
+    assert!(config.model.mc_iter >= 2);
+    assert!(config.model.mc_burn >= 1);
+    assert_eq!(
+        config.model.mc_iter - config.model.mc_burn,
+        config.model.mc_burn,
+        "MC burn must be 1/2 of MC iter"
+    );
+
     // Todo switch to seedable rng
     let mut rng = ChaCha20Rng::seed_from_u64(config.misc.random_seed);
 

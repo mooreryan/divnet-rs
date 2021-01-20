@@ -11,13 +11,16 @@ Here is an example of one with lots of comments to help you see what's going on.
 # Number of expectation maximization (EM) iterations
 em_iter = 6
 
-# Number of EM iterations to burn (i.e., throw out)
+# Number of EM iterations to burn (i.e., throw out). Unlike mc_burn, this does
+# NOT have to be em_iter / 2.
 em_burn = 3
 
-# Number of Monte-Carlo (MC) iterations.
+# Number of Monte-Carlo (MC) iterations.  Must be even (see mc_burn for
+# details).
 mc_iter = 500
 
-# Number of MC iterations to burn
+# Number of MC iterations to burn. It must be mc_iter / 2.  If not, the program
+# will abort.
 mc_burn = 250
 
 # Variance used for MH samples
@@ -63,6 +66,9 @@ config options for the actual model DivNet uses to estimate diversity.  The
 `[io]` section deals with specifying input and output files.  Finally, the
 `[misc]` section contains any options that don't fit in any other
 category.
+
+**IMPORTANT**:  The program will abort unless `mc_burn == mc_iter / 2`.  This is
+*allows me to do some trickery to reduce the overall memory usage by ~1/3.
 
 ## Defaults
 
