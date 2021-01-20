@@ -70,6 +70,18 @@ category.
 **IMPORTANT**:  The program will abort unless `mc_burn == mc_iter / 2`.  This is
 *allows me to do some trickery to reduce the overall memory usage by ~1/3.
 
+### Number of threads
+
+One thing that isn't in the config files, but something you will want to do is to run `divnet-rs` with the `OPENBLAS_NUM_THREADS=1` environmental variable set.  This will ensure that OpenBLAS is only using a single thread.  In all my tests, `divnet-rs` will be between 25-50% faster with 1 thread for OpenBLAS.  You run it like this:
+
+```
+OPENBLAS_NUM_THREADS=1 divnet-rs /path/to/config.toml
+```
+
+Or you could just set that in your system config files.
+
+See [Logging](./logging.md) for how to combine this variable with the logging environmental variables.
+
 ## Defaults
 
 Currently there *are no default values*.  This means that every config file you

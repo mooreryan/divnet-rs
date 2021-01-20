@@ -30,3 +30,12 @@ Generally the default log level is fine.  It's also nice since you don't have to
 
 If you have very large input files and want to see the most logging, for example to try and estimate the time remaining, you could turn on mode messages with `RUST_LOG=trace` or `RUST_LOG=trace`.  It will put a lot of output though.
 
+## Setting config level and number of threads
+
+You set the number of threads for OpenBLAS with an environment variable.  If you want to set the log level and the OpenBLAS threads, you can do it like this:
+
+```shell
+OPENBLAS_NUM_THREADS=1 RUST_LOG=debug divnet-rs /path/to/config.toml
+```
+
+See [Config Files](./config_files.md) for more info on the OpenBLAS thread options.
