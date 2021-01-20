@@ -323,12 +323,14 @@ fn make_mc_iter_lr_container(size: usize, nsamples: usize, ntaxa: usize) -> Vec<
 /// `config` configuration values for the function!
 fn mcmat<R: Rng>(
     mut rng: &mut R,
+    Yi_MH_container: &mut Vec<Matrix>,
+    mc_iter_logratios: &mut Vec<Matrix>,
     Y: &Matrix,
     W: &Matrix,
     eY: &Matrix,
     sigma: &Matrix,
     config: &FitAitchisonConfig,
-) -> (Vec<Matrix>, Vec<Matrix>) {
+) {
     let ntaxa = W.nrows();
     let nsamples = W.ncols();
 
@@ -351,12 +353,12 @@ fn mcmat<R: Rng>(
     // TODO don't bother tracking acceptance.
     // This will contain NS Matrices of MCI x NT matrices (the first col of each of
     // these will be acceptance)
-    let mut Yi_MH_container: Vec<Matrix> = Vec::new();
+    // let mut Yi_MH_container: Vec<Matrix> = Vec::new();
 
-    // This will contain MCI matrices of NT-1 x NS matrices.  Each one is one MC iteration of
-    // logratio estimates. Need these to update sigma.
-    let mut mc_iter_logratios: Vec<Matrix> =
-        make_mc_iter_lr_container(config.mc_iter, nsamples, ntaxa);
+    // // This will contain MCI matrices of NT-1 x NS matrices.  Each one is one MC iteration of
+    // // logratio estimates. Need these to update sigma.
+    // let mut mc_iter_logratios: Vec<Matrix> =
+    //     make_mc_iter_lr_container(config.mc_iter, nsamples, ntaxa);
 
     log::debug!("Processing samples in MC mat");
     for sample_idx in 0..nsamples {
@@ -365,7 +367,8 @@ fn mcmat<R: Rng>(
         // let sample_start_time = SystemTime::now();
 
         // NT-1 x MCI.  Each taxa has MCI iters of Yi estimates.
-        let mut Yi_MH = Matrix::zeros(ntaxa - 1, config.mc_iter);
+        // let mut Yi_MH = Matrix::zeros(ntaxa - 1, config.mc_iter);
+        let Yi_MH = &mut Yi_MH_container[sample_idx];
 
         for mci in 0..config.mc_iter {
             // Depending on the iteration, either take original or previous Yi
@@ -427,10 +430,10 @@ fn mcmat<R: Rng>(
             }
         }
 
-        Yi_MH_container.push(Yi_MH);
+        // Yi_MH_container.push(Yi_MH);
     }
 
-    (Yi_MH_container, mc_iter_logratios)
+    // mc_iter_logratios
 }
 
 // TODO make this nicer...it's copied from original code now.
@@ -896,8 +899,30 @@ pub fn fit_aitchison<R: Rng>(
         log::info!("Starting EM iteration {} of {}", em + 1, config.em_iter);
 
         log::trace!("Running `mcmat`");
-        let (Yi_MH_container, mc_iter_logratios) = mcmat(
+        // todo pass in Yi_MH_container?
+        // TODO don't bother tracking acceptance.
+        // This will contain NS Matrices of MCI x NT matrices (the first col of each of
+        // these will be acceptance)
+        // let mut Yi_MH_container000: Vec<Matrix> = Vec::new();
+        // NT-1 x MCI.  Each taxa has MCI iters of Yi estimates.
+        // let mut Yi_MH = Matrix::zeros(ntaxa - 1, config.mc_iter);
+
+        // (NT-1) x nsamples x mc_iter
+        let mut Yi_MH_container: Vec<Matrix> = (0..nsamples)
+            // todo technically we burn 1/2 of the mc iters so we could do something tricky to only allocate 1/2 and reuse the same part.  we need to keep them tho i think.
+            .map(|_i| Matrix::zeros(ntaxa - 1, config.mc_iter))
+            .collect();
+
+        // This will contain MCI matrices of NT-1 x NS matrices.  Each one is one MC iteration of
+        // logratio estimates. Need these to update sigma.
+        let mut mc_iter_logratios: Vec<Matrix> =
+            make_mc_iter_lr_container(config.mc_iter, nsamples, ntaxa);
+
+        // also updates Yi_MH_container
+        mcmat(
             rng,
+            &mut Yi_MH_container,
+            &mut mc_iter_logratios,
             &logratios,
             &counts,
             &expected_logratios,
