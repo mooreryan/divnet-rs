@@ -369,16 +369,49 @@ fn mcmat<R: Rng>(
         // NT-1 x MCI.  Each taxa has MCI iters of Yi estimates.
         // let mut Yi_MH = Matrix::zeros(ntaxa - 1, config.mc_iter);
         let Yi_MH = &mut Yi_MH_container[sample_idx];
+        assert_eq!(Yi_MH.ncols(), config.mc_iter - config.mc_burn);
+        assert_eq!(Yi_MH.ncols(), config.mc_burn);
 
-        for mci in 0..config.mc_iter {
-            // Depending on the iteration, either take original or previous Yi
-            let Yi = if mci == 0 {
+        // todo will need to crash with better msg on weird user input for these!
+        assert!(config.mc_iter > 1, "MC iters must be > 0");
+        assert!(config.mc_burn > 1, "MC burn must be > 0");
+        // im requiring this so this 1/2 mem hack works
+        assert_eq!(
+            config.mc_iter,
+            config.mc_burn * 2,
+            "MC iter must be 2 * MC burn "
+        );
+
+        for true_mci in 0..config.mc_iter {
+            let in_burn_stage = true_mci < config.mc_burn;
+
+            let mci = if in_burn_stage {
+                // in the burn stage
+                true_mci
+            } else {
+                // in the keep stage
+                true_mci - config.mc_burn
+            };
+
+            // Depending on the iteration, either take original Y, or previous Yi, or ___.
+            let Yi = if mci == 0 && in_burn_stage {
                 // First mc iter we take the actual Y values for this row.
                 Y.col(sample_idx)
+            } else if mci == 0 {
+                // We are NOT in burn stage.  First iter of keep stage.
+                //
+                // Get the previous Yi_MH.  It is at the end of the storage.
+                assert_eq!(
+                    config.mc_burn,
+                    Yi_MH.ncols(),
+                    "mc_burn should equal Yi_MH.cols()"
+                );
+                let last_iteration = Yi_MH.ncols() - 1;
+                Yi_MH.col(last_iteration)
             } else {
                 // The rest of the mc iters, we take the result of the last iteration.
                 let last_iteration = mci - 1;
-                Yi_MH.col(last_iteration) // immutable borrow :(
+                Yi_MH.col(last_iteration)
             };
 
             let Wi = W.col(sample_idx);
@@ -399,7 +432,7 @@ fn mcmat<R: Rng>(
             let accepted = is_accepted(acceptance, &uniform, &mut rng);
 
             assert_eq!(Yi_MH.nrows(), Yi_star.len());
-            assert_eq!(mc_iter_logratios.len(), config.mc_iter);
+            assert_eq!(mc_iter_logratios.len(), config.mc_iter - config.mc_burn);
             assert_eq!(mc_iter_logratios[0].dim(), (ntaxa - 1, nsamples));
             if accepted {
                 for taxa_idx in 0..Yi_MH.nrows() {
@@ -415,8 +448,15 @@ fn mcmat<R: Rng>(
                     //let val = 10101.;
 
                     // TODO this extra check is yucky!
-                    let val = if mci == 0 {
+                    let val = if mci == 0 && in_burn_stage {
+                        // get the original counts...this is truly the first iter.
                         Y.get(taxa_idx, sample_idx)
+                    } else if mci == 0 {
+                        // We are in the keep stage....the lat iter is the END of the Yi_MH since it
+                        // only holds enough space for the real counts.
+                        let last_itr = Yi_MH.ncols() - 1;
+
+                        Yi_MH.get(taxa_idx, last_itr)
                     } else {
                         let last_itr = mci - 1;
 
@@ -551,12 +591,13 @@ fn make_Y_new(
     // the first column of yi_mh will be acceptance ratio...so let's just ignore that for now
     let mut Y_new = Matrix::zeros(ntaxa - 1, nsamples);
     for (sample_idx, yi_mh) in Yi_MH_container.iter().enumerate() {
-        assert_eq!(yi_mh.dim(), (ntaxa - 1, config.mc_iter));
+        assert_eq!(yi_mh.dim(), (ntaxa - 1, config.mc_iter - config.mc_burn));
+        assert_eq!(config.mc_iter - config.mc_burn, config.mc_iter / 2);
 
         for taxa_idx in 0..yi_mh.nrows() {
             let sample_lr_estimates = yi_mh.row(taxa_idx);
 
-            let sum = sample_lr_estimates[config.mc_burn..config.mc_iter]
+            let sum = sample_lr_estimates //[config.mc_burn..config.mc_iter]
                 .iter()
                 .sum::<f64>();
             let mean = sum / (config.mc_iter - config.mc_burn) as f64;
@@ -661,15 +702,20 @@ fn update_sigma(
     sigma: &mut Matrix,
     config: &FitAitchisonConfig,
 ) {
+    assert_eq!(config.mc_iter - config.mc_burn, config.mc_iter / 2);
+
     // update sigma....here is where we need the NS x NT-1 matrices that are produced by MC
     // iters.  There will be MCiters of them to deal with.
-    assert_eq!(mc_iter_logratios.len(), config.mc_iter);
+    assert_eq!(mc_iter_logratios.len(), config.mc_iter - config.mc_burn);
     // ignore burnt iters
 
     assert_eq!(sigma.dim(), (ntaxa - 1, ntaxa - 1));
 
+    log::trace!("`update_sigma` step 1");
+
     let mut updated_sigma = Matrix::zeros(sigma.nrows(), sigma.ncols());
-    for mci in config.mc_burn..mc_iter_logratios.len() {
+    for mci in 0..(config.mc_iter - config.mc_burn) {
+        // config.mc_burn..mc_iter_logratios.len() {
         let mc_lrs = &mc_iter_logratios[mci];
         assert_eq!(mc_lrs.dim(), (ntaxa - 1, nsamples));
         assert_eq!(expected_logratios.dim(), (ntaxa - 1, nsamples));
@@ -688,6 +734,8 @@ fn update_sigma(
             }
         }
     }
+
+    log::trace!("`update_sigma` step 2");
 
     let mut updated_sigma_mean = Matrix::zeros(sigma.nrows(), sigma.ncols());
     for j in 0..updated_sigma_mean.ncols() {
@@ -910,13 +958,13 @@ pub fn fit_aitchison<R: Rng>(
         // (NT-1) x nsamples x mc_iter
         let mut Yi_MH_container: Vec<Matrix> = (0..nsamples)
             // todo technically we burn 1/2 of the mc iters so we could do something tricky to only allocate 1/2 and reuse the same part.  we need to keep them tho i think.
-            .map(|_i| Matrix::zeros(ntaxa - 1, config.mc_iter))
+            .map(|_i| Matrix::zeros(ntaxa - 1, config.mc_iter - config.mc_burn))
             .collect();
 
         // This will contain MCI matrices of NT-1 x NS matrices.  Each one is one MC iteration of
         // logratio estimates. Need these to update sigma.
         let mut mc_iter_logratios: Vec<Matrix> =
-            make_mc_iter_lr_container(config.mc_iter, nsamples, ntaxa);
+            make_mc_iter_lr_container(config.mc_iter - config.mc_burn, nsamples, ntaxa);
 
         // also updates Yi_MH_container
         mcmat(
@@ -932,6 +980,7 @@ pub fn fit_aitchison<R: Rng>(
 
         log::trace!("Running `make_Y_new`");
         // Estimated logrations from this round of MCiters
+        // done 1/2
         let Y_new = make_Y_new(nsamples, ntaxa, &Yi_MH_container, &config);
         assert_eq!(Y_new.dim(), (ntaxa - 1, nsamples));
 
@@ -941,6 +990,7 @@ pub fn fit_aitchison<R: Rng>(
 
         log::trace!("Running `update_sigma`");
         // TODO orig code has it this way, but why isn't the updated expected logratios used here?
+        // done 1/2
         update_sigma(
             nsamples,
             ntaxa,
