@@ -6,16 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Added 
+## [0.2.0] -- 2020-01-19
+
+### Added
 
 - Makefile for testing the Lee phylum dataset during development.
+- Documentation for:
+    - Properly setting MC iter and MC burn options
+    - Setting OpenBLAS threads
+    - Getting sample order correct in the sample data file
 
 ### Changed
 
 - Updated CHANGELOG.md.
 - Updated docs to describe seeding.
 - Users must now specify a seed for the random number generator in the config files.
-- Switch to the ChaCha20 rng rather than `thread_rng()`
+- Switched to the ChaCha20 rng rather than `thread_rng()`
+- Changed the way the MC iterations are stored.  Now `divnet-rs` uses 1/3 less RAM than before!
+- Updated the `rand` crate dependencies.
 
 ## [0.1.1] -- 2020-01-16
 
@@ -38,6 +46,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Initial commit!
 
 
-[Unreleased]: https://github.com/mooreryan/divnet-rs/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/mooreryan/divnet-rs/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/mooreryan/divnet-rs/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/mooreryan/divnet-rs/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/mooreryan/divnet-rs/releases/tag/v0.1.0
