@@ -16,7 +16,7 @@ have Rust, you must [install it first](https://www.rust-lang.org/tools/install).
 
 If you don't already have `gcc` you could install it from your distro's package manager e.g., `sudo apt-get install build-essentials` or something similar.  This will get you both `gcc` and `gfortran`. Also, you can check out the [official gcc install docs](https://gcc.gnu.org/install/).  
 
-Additionally you will need to install OpenBLAS.  You can install it [from source](TOOD), but many distros also have it in their package managers. 
+Additionally you will need to install OpenBLAS.  You can install it [from source](https://github.com/xianyi/OpenBLAS), but many distros also have it in their package managers. 
 
 You may need to adjust the `LIBRARY_PATH` and `LD_LIBRARY_PATH` environmental variables depending on how you installed the above software.  See below for more info about that. 
 

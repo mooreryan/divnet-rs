@@ -1,0 +1,278 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Full Walkthrough - divnet-rs: a Rust implementation of DivNet</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="divnet_rs.html">divnet-rs</a></li><li class="chapter-item expanded "><a href="installing.html"><strong aria-hidden="true">1.</strong> Installation</a></li><li class="chapter-item expanded "><a href="usage.html"><strong aria-hidden="true">2.</strong> Usage</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="input_output_files.html"><strong aria-hidden="true">2.1.</strong> Input &amp; Output Files</a></li><li class="chapter-item expanded "><a href="config_files.html"><strong aria-hidden="true">2.2.</strong> Config Files</a></li><li class="chapter-item expanded "><a href="logging.html"><strong aria-hidden="true">2.3.</strong> Logging</a></li></ol></li><li class="chapter-item expanded "><a href="examples_and_tutorial.html"><strong aria-hidden="true">3.</strong> Examples &amp; Tutorial</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="examples.html"><strong aria-hidden="true">3.1.</strong> Examples</a></li><li class="chapter-item expanded "><a href="lee_data_walkthrough.html" class="active"><strong aria-hidden="true">3.2.</strong> Full Walkthrough</a></li></ol></li><li class="chapter-item expanded "><a href="differences_from_original.html"><strong aria-hidden="true">4.</strong> Differences from the R package</a></li><li class="chapter-item expanded "><a href="citing_divnet.html"><strong aria-hidden="true">5.</strong> Citing DivNet</a></li><li class="chapter-item expanded "><a href="more_info.html"><strong aria-hidden="true">6.</strong> More Useful Info</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">divnet-rs: a Rust implementation of DivNet</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#full-tutorial" id="full-tutorial">Full Tutorial</a></h1>
+<p>You can find the scripts and data for this walk-through <a href="https://github.com/mooreryan/divnet-rs/tree/master/test_files/lee_data_walkthrough">on the GitHub page</a>.</p>
+<p>DELETE? There, I show you how to analyze the Lee dataset included with the DivNet R package with <code>divnet-rs</code>, including getting data out of R into the format that <code>divnet-rs</code> wants, running <code>divnet-rs</code>, and then importing data back in to how and how to use it.</p>
+<h1><a class="header" href="#comparing-divnet-and-divnet-rs" id="comparing-divnet-and-divnet-rs">Comparing DivNet and divnet-rs</a></h1>
+<p>I will use the Lee data grouped by phylum as in the <a href="https://github.com/adw96/DivNet/blob/31e04e29e4f3c02ea07c7f35873ee6743b79170a/vignettes/getting-started.Rmd">DivNet docs</a>.</p>
+<h2><a class="header" href="#run-divnet-and-generate-divnet-rs-input-files" id="run-divnet-and-generate-divnet-rs-input-files">Run DivNet and generate divnet-rs input files</a></h2>
+<p>First you should check out <a href="https://github.com/mooreryan/divnet-rs/tree/master/test_files/lee_data_walkthrough/1_lee_phylum.R">1_lee_phylum.R</a>.  It is an R script for running DivNet on the Lee data aggregated by phylum.  It also generates the data that will be used fir <code>divnet-rs</code>.</p>
+<h2><a class="header" href="#run-divnet-rs" id="run-divnet-rs">Run divnet-rs</a></h2>
+<p>Now you can run <code>divnet-rs</code> using the <a href="https://github.com/mooreryan/divnet-rs/tree/master/test_files/lee_data_walkthrough/2_lee_phylum_config.toml">2_lee_phylum_config.toml</a> config file.  Something like this:</p>
+<pre><code>divnet-rs ./test_files/lee_data_walkthrough/2_lee_phylum_config.toml
+</code></pre>
+<p>You will notice that it is faster, but I just want to make it clear that on a dataset as small as this one I would use the the R version of DivNet.  Generally, you would only be using <code>divnet-rs</code> if whatever you want to do is impossible in the R version!</p>
+<h2><a class="header" href="#import-divnet-rs-output-back-into-r" id="import-divnet-rs-output-back-into-r">Import divnet-rs output back into R</a></h2>
+<p>To see how to import the data back in to R so you can work with it, check out <a href="https://github.com/mooreryan/divnet-rs/tree/master/test_files/lee_data_walkthrough/3_import_divnet_rs_data.R">3_import_divnet_rs_data.R</a>.</p>
+<h2><a class="header" href="#wrap-up" id="wrap-up">Wrap up</a></h2>
+<p>To try it out, assuming you haven't rearranged anything in the <code>divnet-rs</code> source directory, you can run the commands like this:</p>
+<pre><code>Rscript ./docs/lee_data/1_lee_phylum.R
+
+OPENBLAS_NUM_THREADS=1 divnet-rs ./docs/lee_data/2_lee_phylum_config.toml
+
+Rscript ./docs/lee_data/3_import_divnet_rs_data.R
+</code></pre>
+<p>Note the <code>OPENBLAS_NUM_THREADS=1</code> part in front of the <code>divnet-rs</code> command.  In my tests, forcing OpenBLAS to use a single thread results in much better <code>divnet-rs</code> performance.  See <a href="./config_files.html#number-of-threads">this section of the divnet-rs manual</a> for more information about this.</p>
+<h3><a class="header" href="#plots" id="plots">Plots</a></h3>
+<p>And here are the plots!  One thing that you will notice is that the error bars are a bit different.  This is because the MC-MH algorithm DivNet uses (and thus that <code>divnet-rs</code> uses) is dependent on random number generation.  So you'll get some noise run-to-run.</p>
+<h4><a class="header" href="#divnet" id="divnet">DivNet</a></h4>
+<p><img src="./images/lee_phylum_divnet_plot.png" alt="Lee phylum DivNet" /></p>
+<h4><a class="header" href="#divnet-rs" id="divnet-rs">divnet-rs</a></h4>
+<p><img src="./images/lee_phylum_divnet_rs_plot.png" alt="Lee phylum divnet-rs" /></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="examples.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="differences_from_original.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="examples.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="differences_from_original.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3000/__livereload");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>

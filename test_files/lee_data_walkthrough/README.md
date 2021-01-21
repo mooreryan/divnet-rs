@@ -1,3 +1,5 @@
+TODO sync this up with the `lee_data_walkthrough.md` file.
+
 # Comparing DivNet and divnet-rs
 
 I will use the Lee data grouped by phylum as in the [DivNet docs](https://github.com/adw96/DivNet/blob/31e04e29e4f3c02ea07c7f35873ee6743b79170a/vignettes/getting-started.Rmd).

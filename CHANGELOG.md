@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Move documentation from the `./docs` directory into `./book/src`.  This sets up using `mdBook` for generating nice online documentation.
+
 ## [0.2.0] -- 2020-01-19
 
 ### Added

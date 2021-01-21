@@ -1,0 +1,6 @@
+[book]
+authors = ["Ryan Moore"]
+language = "en"
+multilingual = false
+src = "src"
+title = "divnet-rs: a Rust implementation of DivNet"

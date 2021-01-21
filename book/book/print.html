@@ -1,0 +1,615 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>divnet-rs: a Rust implementation of DivNet</title>
+        
+        <meta name="robots" content="noindex" />
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="favicon.png">
+        
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        
+        <link rel="stylesheet" href="css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="divnet_rs.html">divnet-rs</a></li><li class="chapter-item expanded "><a href="installing.html"><strong aria-hidden="true">1.</strong> Installation</a></li><li class="chapter-item expanded "><a href="usage.html"><strong aria-hidden="true">2.</strong> Usage</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="input_output_files.html"><strong aria-hidden="true">2.1.</strong> Input &amp; Output Files</a></li><li class="chapter-item expanded "><a href="config_files.html"><strong aria-hidden="true">2.2.</strong> Config Files</a></li><li class="chapter-item expanded "><a href="logging.html"><strong aria-hidden="true">2.3.</strong> Logging</a></li></ol></li><li class="chapter-item expanded "><a href="examples_and_tutorial.html"><strong aria-hidden="true">3.</strong> Examples &amp; Tutorial</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="examples.html"><strong aria-hidden="true">3.1.</strong> Examples</a></li><li class="chapter-item expanded "><a href="lee_data_walkthrough.html"><strong aria-hidden="true">3.2.</strong> Full Walkthrough</a></li></ol></li><li class="chapter-item expanded "><a href="differences_from_original.html"><strong aria-hidden="true">4.</strong> Differences from the R package</a></li><li class="chapter-item expanded "><a href="citing_divnet.html"><strong aria-hidden="true">5.</strong> Citing DivNet</a></li><li class="chapter-item expanded "><a href="more_info.html"><strong aria-hidden="true">6.</strong> More Useful Info</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">divnet-rs: a Rust implementation of DivNet</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#divnet-rs" id="divnet-rs">divnet-rs</a></h1>
+<p><a href="https://github.com/adw96/DivNet">DivNet</a> is an R package for estimating diversity when taxa in the community co-occur via ecological networks.  It leverages information from multiple samples and data about the samples (covariates) in order to give more accurate estimates of variance in the measured diversity.  Possibly it's coolest feature is that, unlike most existing methods of measuring diversity, it uses models from <a href="https://en.wikipedia.org/wiki/Compositional_data">compositional data analysis</a> that take into account ecological networks in which taxa positively and negatively co-occur.</p>
+<p>While the DivNet R package makes it simple to apply the algorithms from <a href="https://github.com/adw96/DivNet">Willis &amp; Martin 2020</a> to your data, it does have trouble with large datasets.  This is where <code>divnet-rs</code> comes it.  It is a <a href="TODO">Rust</a> implementation of the DivNet algorithm.  It allows you to successfully run much larger datasets even on your laptop!</p>
+<p>In this book, you will find documentation and information for installing and using <code>divnet-rs</code>.  Additionally, I will go over a couple examples and a tutorial to help you get started!</p>
+<p>For more background information and the theory behind DivNet, please check out the <a href="https://github.com/adw96/DivNet">original DivNet repository</a> and the <a href="https://doi.org/10.1093/biostatistics/kxaa015">DivNet manuscript</a>.</p>
+<p>You can find the <code>divnet-rs</code> source code on <a href="https://github.com/mooreryan/divnet-rs">GitHub</a>.</p>
+<h1><a class="header" href="#installing-divnet-rs" id="installing-divnet-rs">Installing divnet-rs</a></h1>
+<p>I have successfully installed and run <code>divnet-rs</code> on both Debian Linux and
+MacOSX.  I haven't tested this out on Windows at all :)</p>
+<h2><a class="header" href="#dependencies" id="dependencies">Dependencies</a></h2>
+<p><code>divnet-rs</code> is written in <a href="https://www.rust-lang.org/">Rust</a>.  If you do not
+have Rust, you must <a href="https://www.rust-lang.org/tools/install">install it first</a>.</p>
+<p><code>divnet-rs</code> depends on BLAS and LAPACK for fast numerical computation.  While there are lots of different implementations, <code>divnet-rs</code> uses <a href="https://www.openblas.net/">OpenBLAS</a>.  To install OpenBLAS, you will need a C compiler and a Fortran compiler.  I recommend <a href="https://gcc.gnu.org/">GCC, the GNU Compiler Collection</a> for this.  With the GCC toolchain, I was able to install on both Linux and Mac with no issues.</p>
+<p><em>Note:  If you already have gcc, and you're using a Mac, you should check that you have an actual gcc program.  Often, you will use <code>gcc</code> from the command line, but it will actually be <a href="https://clang.llvm.org/">clang</a>.  You can check by running <code>gcc --vertion</code> and inspecting the output.  I was <strong>not</strong> able to compile <code>divnet-rs</code> using clang.</em></p>
+<h3><a class="header" href="#linux" id="linux">Linux</a></h3>
+<p>If you don't already have <code>gcc</code> you could install it from your distro's package manager e.g., <code>sudo apt-get install build-essentials</code> or something similar.  This will get you both <code>gcc</code> and <code>gfortran</code>. Also, you can check out the <a href="https://gcc.gnu.org/install/">official gcc install docs</a>.</p>
+<p>Additionally you will need to install OpenBLAS.  You can install it <a href="https://github.com/xianyi/OpenBLAS">from source</a>, but many distros also have it in their package managers. </p>
+<p>You may need to adjust the <code>LIBRARY_PATH</code> and <code>LD_LIBRARY_PATH</code> environmental variables depending on how you installed the above software.  See below for more info about that. </p>
+<h3><a class="header" href="#mac" id="mac">Mac</a></h3>
+<p>I used <a href="https://brew.sh/">Homebrew</a> to install GCC and OpenBLAS like so:</p>
+<pre><code>brew install gcc
+brew install openblas
+</code></pre>
+<p>Given the way Homebrew installs these packages, I needed to tweak some environment variables so that Cargo and the Rust compiler could actually link to the libraries.</p>
+<p>When I installed with Homebrew, the OpenBLAS libraries were in <code>/usr/local/opt/openblas/lib</code> and the GCC libraries were in <code>/usr/local/lib/gcc/10</code>.  So I needed to set the <code>LIBRARY_PATH</code> and <code>LD_LIBRARY_PATH</code> environmental variables like so:</p>
+<pre><code class="language-shell"># For building
+LIBRARY_PATH=&quot;/usr/local/opt/openblas/lib&quot;
+LIBRARY_PATH=&quot;${LIBRARY_PATH}:/usr/local/lib/gcc/10&quot;
+export LIBRARY_PATH
+
+# For running
+LD_LIBRARY_PATH=&quot;/usr/local/opt/openblas/lib&quot;
+LD_LIBRARY_PATH=&quot;${LD_LIBRARY_PATH}:/usr/local/lib/gcc/10&quot;
+export LD_LIBRARY_PATH
+</code></pre>
+<p>Note that if you already have them set, you will need to append rater than overwrite them (as I did when setting the OpenBLAS paths).</p>
+<p>You should put that in either <code>~/.profile</code>, <code>~/.bash_profile</code>, <code>~/.zprofile</code>, or whatever place you keep your shell startup configuration.</p>
+<h2><a class="header" href="#installing-from-source" id="installing-from-source">Installing from source</a></h2>
+<p>There are two options.  You can either download a tagged release (recommended) or follow the master branch if you want the latest updates.</p>
+<p>If you want to track the master branch, clone the git repository like so:</p>
+<pre><code>git clone https://github.com/mooreryan/divnet-rs.git
+</code></pre>
+<p>However, I recommend that you download a
+<a href="https://github.com/mooreryan/divnet-rs/releases">release</a> as they are versioned.</p>
+<p>Once you have the source code, <code>cd</code> in to the root of the source directory and
+use <code>cargo</code> to compile the program. (Cargo will be installed when you install Rust.)  Here is an example:</p>
+<pre><code>cd divnet-rs
+cargo build --release
+</code></pre>
+<p>Note that this can take a while, but you will <em>not</em> have to compile the program
+each time you use it!</p>
+<p>You should now have a compiled binary in <code>./target/release/divnet-rs</code>.  You will
+probably want move or symlink the executable binary
+(<code>./target/release/divnet-rs</code>) somewhere on your path.  For example, if you want
+to create a symlink to <code>~/bin</code>, you could run something like this:</p>
+<pre><code>ln -s $(pwd)/target/release/divnet-rs $HOME/bin/divnet-rs
+</code></pre>
+<p>You can check that you have access to the <code>divnet-rs</code> binary with the <code>which</code>
+command:</p>
+<pre><code>which divnet-rs #=&gt; /home/ryan/bin/divnet-rs
+</code></pre>
+<p>If you see a path, then the linking worked!  If not, then you can still just use
+the program from its current directory (<code>target/release/divnet-rs</code>) or try and
+<a href="https://gist.github.com/nex3/c395b2f8fd4b02068be37c961301caa7">figure out how to get it on your path</a>.</p>
+<h2><a class="header" href="#testing-your-installation" id="testing-your-installation">Testing your installation</a></h2>
+<p>The <code>divnet-rs</code> repository includes some handy test files to check that
+everything is working correctly.</p>
+<p>Try it out!</p>
+<pre><code>divnet-rs ./test_files/small/config_small.toml
+</code></pre>
+<p>If all goes well, you should see some logging output that ends with a line like
+this:</p>
+<pre><code>[2021-01-14T02:59:49Z INFO  divnet_rs] Done!  Output file is: &quot;./test_files/small/small_divnet_output.csv&quot;
+</code></pre>
+<p>Additionally there are some automated tests that you can run with <code>cargo test</code>.</p>
+<h1><a class="header" href="#usage" id="usage">Usage</a></h1>
+<p>In this section, we will talk about how to use <code>divnet-rs</code> to analyze your data.  Let's get started!</p>
+<h1><a class="header" href="#input--output-files" id="input--output-files">Input &amp; Output Files</a></h1>
+<p>The <code>divnet-rs</code> <a href="https://github.com/mooreryan/divnet-rs/tree/master/test_files/lee_data_walkthrough">GitHub page</a> has some example R scripts to help you get data out of R and in to <code>divnet-rs</code> as well as scripts to help you get data from <code>divnet-rs</code> back into R for further analysis.  Of course, you can also generate the input files by hand, but it is not as easy!  They aren't the nicest R scripts you've ever seen, but they should help you to get started!</p>
+<h2><a class="header" href="#input-files" id="input-files">Input files</a></h2>
+<p>The <code>divnet-rs</code> program takes two input files: a count table and a file with
+sample data. Both should be CSV files.</p>
+<h3><a class="header" href="#count-table" id="count-table">Count table</a></h3>
+<p>The count table (aka OTU table, aka ASV table) is a taxa-by-sample
+representation of your experiment.</p>
+<p>Here is an example:</p>
+<pre><code class="language-csv">taxa,s1,s2,s3
+t1,200,1,2
+t2,210,2,1
+t3,180,2,1
+t4,1,230,235
+t5,2,220,215
+</code></pre>
+<p>This data set has five taxa (<code>t1</code>, <code>t2</code>, <code>t3</code>, <code>t4</code>, <code>t5</code>) and three samples
+(<code>s1</code>, <code>s2</code>, <code>s3</code>). Note that these can be named whatever you want.</p>
+<p>The <code>taxa</code> specifier is ignored and so you can write whatever you want there.
+E.g., if you have amplicon sequence variants, you could put <code>asv</code> there instead
+of <code>taxa</code>.</p>
+<p>The values are counts, so they should be positive integers only.</p>
+<h3><a class="header" href="#sample-data" id="sample-data">Sample data</a></h3>
+<p>The sample data file is a little weird looking, I will admit. It is basically
+the output of the R function <code>model.matrix</code>. It converts your dummy variables
+to 0 and 1.</p>
+<p><em><strong>Important note</strong>: the order of the samples in the sample data file has to match with the order of the samples in the count table file. This is not ideal, but currently that's how it works :/</em></p>
+<h4><a class="header" href="#a-simple-example" id="a-simple-example">A simple example</a></h4>
+<p>In this case, there is only one covariate: <code>snazzy</code>. Here, I have labeled it as
+<code>snazzyyes</code> indicating that samples with a <code>1</code> are snazzy (i.e., positive for
+condition <code>snazzy</code>) and samples with a <code>0</code> are not snazzy (negative for
+condition <code>snazzy</code>). So <code>s1</code> is snazzy, but <code>s2</code> and <code>s3</code> are NOT snazzy.</p>
+<pre><code class="language-csv">sample,snazzyyes
+s1,1
+s2,0
+s3,0
+</code></pre>
+<h4><a class="header" href="#another-example" id="another-example">Another example</a></h4>
+<p>Here are a couple of lines from the sample data file for the Lee dataset that's
+included in DivNet.</p>
+<pre><code class="language-csv">sample,charbiofilm,charcarbonate,charglassy,charwater
+BW1,0,0,0,1
+BW2,0,0,0,1
+R10,0,0,1,0
+R11,0,0,1,0
+</code></pre>
+<p>As you can see, the variable of interest is <code>char</code>. It has the following
+columns:</p>
+<ul>
+<li><code>charbiofilm</code> (<code>1</code> for yes, it's a biofilm sample, <code>0</code> for no it is not)</li>
+<li><code>charcarbonate</code> (<code>1</code> for yes, it's a carbonate sample, <code>0</code> for no it is not)</li>
+<li><code>charglassy</code> (<code>1</code> for yes, it's a glassy sample, <code>0</code> for no it is not)</li>
+<li><code>charwater</code> (<code>1</code> for yes, it's a water sample, <code>0</code> for no it is not)</li>
+</ul>
+<p>Now the Lee data has a fifth category, <code>alered</code>. It is not listed here as that
+is the way the <code>model.matrix</code> dummy encoding works. You don't need a column for
+it, (and if you do include it in your dummy encoding things can get wonky) any
+sample with a <code>0</code> in all the colunms is an <code>altered</code> sample.</p>
+<h2><a class="header" href="#output-files" id="output-files">Output files</a></h2>
+<p>Here is the output file you get if you run the example files in <code>&lt;source root&gt;/test_files/small</code>. (The little ones you see above!)</p>
+<pre><code class="language-csv"># this is replicate 0
+replicate,sample,t1,t2,t3,t4,t5
+0,s1,0.33855749713477606,0.34823818972504217,0.30865008153567924,0.0018295805613595625,0.0027246510431431564
+0,s2,0.0030379849794267364,0.0028353087370401467,0.0033011806108468353,0.490330204063212,0.5004953216094743
+0,s3,0.0030379849794267364,0.0028353087370401467,0.0033011806108468353,0.490330204063212,0.5004953216094743
+# this is replicate 1
+1,s1,0.3627204546824228,0.36468668498369233,0.26626637816414933,0.00008013857010885896,0.006246343599626745
+1,s2,0.0006637323562423841,0.0027111558898110805,0.003702116838977756,0.5432176368099867,0.44970535810498213
+1,s3,0.0006637323562423841,0.0027111558898110805,0.003702116838977756,0.5432176368099867,0.44970535810498213
+# this is replicate 2
+2,s1,0.5294663181856507,0.2428125790405528,0.22595059438495904,0.0016861984655594231,0.00008430992327797039
+2,s2,0.003824488773323916,0.003824488773323916,0.005408643892378329,0.5034205045920187,0.48352187396895513
+2,s3,0.003824488773323916,0.003824488773323916,0.005408643892378329,0.5034205045920187,0.48352187396895513
+# this is replicate 3
+3,s1,0.5901081082784421,0.22421302607955013,0.17869297960014005,0.0015961885594974962,0.005389697482370069
+3,s2,0.0030619926513927457,0.0006994389587677033,0.004747225069582607,0.5271925248691112,0.4642988184511458
+3,s3,0.0030619926513927457,0.0006994389587677033,0.004747225069582607,0.5271925248691112,0.4642988184511458
+# this is replicate 4
+4,s1,0.42087439504861085,0.3408217058601948,0.22533144275449316,0.0035274481524021776,0.009445008184299079
+4,s2,0.004061119432165891,0.0007170056373956505,0.0007467384699807625,0.5003428103976993,0.4941323260627584
+4,s3,0.004061119432165891,0.0007170056373956505,0.0007467384699807625,0.5003428103976993,0.4941323260627584
+# this is replicate 5
+5,s1,0.20558302906768744,0.49136400424687354,0.29390176182754923,0.005463507248674078,0.0036876976092156933
+5,s2,0.000702351053334611,0.0024864420846098466,0.0032837333411371906,0.43124409424160054,0.5622833792793178
+5,s3,0.000702351053334611,0.0024864420846098466,0.0032837333411371906,0.43124409424160054,0.5622833792793178
+</code></pre>
+<p>Again, not all that nice for human consumption, but it will be nice and easy to
+parse in R. Check out the <a href="https://github.com/mooreryan/divnet-rs/tree/master/test_files/lee_data_walkthrough">scripts</a> I mentioned above for an example of this!</p>
+<h1><a class="header" href="#configuration-files" id="configuration-files">Configuration Files</a></h1>
+<p>You control <code>divnet-rs</code> using a <a href="https://toml.io/">TOML</a> configuration file
+(config file).</p>
+<p>Here is an example of one with lots of comments to help you see what's going on.
+Feel free to copy this file and use it as a model for your own datasets!</p>
+<pre><code class="language-toml">[model]
+# Number of expectation maximization (EM) iterations
+em_iter = 6
+
+# Number of EM iterations to burn (i.e., throw out). Unlike mc_burn, this does
+# NOT have to be em_iter / 2.
+em_burn = 3
+
+# Number of Monte-Carlo (MC) iterations.  Must be even (see mc_burn for
+# details).
+mc_iter = 500
+
+# Number of MC iterations to burn. It must be mc_iter / 2.  If not, the program
+# will abort.
+mc_burn = 250
+
+# Variance used for MH samples
+stepsize = 0.01
+
+# Perterbation magnitude for zero values when calculating logratios. (Any zero
+# value will be replaced with this.) 
+perturbation = 0.05
+
+# Number of bootstrap iterations for estimating the variance.
+replicates = 5
+
+# The &quot;base&quot; taxa to use in the logratios.  The number represents the (0-based)
+# index of the taxon you want.  So 0 here means the first taxon, 1 means the
+# second, and so on.  Ideally it is a taxa observed in all samples.  That's not
+# likely though, so try a couple of highly abundant taxa to confirm the results
+# are robust to the taxon choice. 
+base_taxa = 0
+
+[io]
+# If you use relative paths here, they will be interpreted relative to the
+# directory from which you run the divnet-rs command.  If things get weird with
+# that, or you're using a job scheduler like slurm or torque, just specify the
+# absolute path here instead.
+
+# The path to your count/asv/otu table
+count_table = &quot;./test_files/small/small_count_table.csv&quot;
+
+# The path to your sample data
+sample_data = &quot;./test_files/small/small_sample_data.csv&quot;
+
+# The path to the file that divnet-rs will generate
+output = &quot;./test_files/small/small_divnet_output.csv&quot;
+
+[misc]
+# An unsigned 64 bit integer used to seed the random number generator.
+random_seed = 0
+</code></pre>
+<p>As you can see it is broken up in to three sections (model, io, and misc) each
+controlling a different aspect of the software.  The <code>[model]</code> section contains
+config options for the actual model DivNet uses to estimate diversity.  The
+<code>[io]</code> section deals with specifying input and output files.  Finally, the
+<code>[misc]</code> section contains any options that don't fit in any other
+category.</p>
+<p><strong>IMPORTANT</strong>:  The program will abort unless <code>mc_burn == mc_iter / 2</code>.  This is
+*allows me to do some trickery to reduce the overall memory usage by ~1/3.</p>
+<h3><a class="header" href="#number-of-threads" id="number-of-threads">Number of threads</a></h3>
+<p>One thing that isn't in the config files, but something you will want to do is to run <code>divnet-rs</code> with the <code>OPENBLAS_NUM_THREADS=1</code> environmental variable set.  This will ensure that OpenBLAS is only using a single thread.  In all my tests, <code>divnet-rs</code> will be between 25-50% faster with 1 thread for OpenBLAS.  You run it like this:</p>
+<pre><code>OPENBLAS_NUM_THREADS=1 divnet-rs /path/to/config.toml
+</code></pre>
+<p>Or you could just set that in your system config files.</p>
+<p>See <a href="./logging.html">Logging</a> for how to combine this variable with the logging environmental variables.</p>
+<h2><a class="header" href="#defaults" id="defaults">Defaults</a></h2>
+<p>Currently there <em>are no default values</em>.  This means that every config file you
+write has to explicitly list all of the options you see in the file above.  I
+would like to eventually change this so you only have to specify values that
+differ from the defaults, but as of now, you will have to be explicit :)</p>
+<p>That said, DivNet does have some defaults for the tuning of the algorithm.  Here
+is how you would set up the <code>[model]</code> section to use the defaults.</p>
+<p>Note that <code>divnet-rs</code> is ~20x faster than the R
+implementation.  This means that depending on the size of your dataset, you
+could crank <code>em_*</code>, <code>mc_*</code>, and <code>replicates</code> options up really high and see what
+happens.  I haven't really tried this out yet, but it might be interesting!</p>
+<h3><a class="header" href="#divnet-fast-default" id="divnet-fast-default">DivNet 'fast' default</a></h3>
+<pre><code class="language-toml">[model]
+em_iter = 6
+em_burn = 3
+mc_iter = 500
+mc_burn = 250
+stepsize = 0.01
+perturbation = 0.05
+replicates = 5
+base_taxa = 0
+</code></pre>
+<h3><a class="header" href="#divnet-careful-default" id="divnet-careful-default">DivNet 'careful' default</a></h3>
+<pre><code class="language-toml">[model]
+em_iter = 10
+em_burn = 5
+mc_iter = 1000
+mc_burn = 500
+stepsize = 0.01
+perturbation = 0.05
+replicates = 5
+base_taxa = 0
+</code></pre>
+<h1><a class="header" href="#logging" id="logging">Logging</a></h1>
+<p><code>divnet-rs</code> logs various things to standard error during a run.</p>
+<h2><a class="header" href="#log-levels" id="log-levels">Log levels</a></h2>
+<p>There are multiple log levels.  Here they are from least important to most important.</p>
+<ul>
+<li><code>trace</code></li>
+<li><code>debug</code></li>
+<li><code>info</code></li>
+<li><code>warn</code></li>
+<li><code>error</code></li>
+</ul>
+<p>By default <code>divnet-rs</code> only prints <code>info</code>, <code>warn</code>, and <code>error</code> messages.</p>
+<p>If you want, you can turn on the lower level messages using the <code>RUST_LOG</code> <a href="https://www.digitalocean.com/community/tutorials/how-to-read-and-set-environmental-and-shell-variables-on-linux">environmental variable</a> like this:</p>
+<pre><code>RUST_LOG=debug divnet-rs config.toml
+</code></pre>
+<p>That would tell <code>divnet-rs</code> to print all <code>debug</code> messages plus any messages that are of higher importance (<code>info</code>, <code>warn</code>, and <code>error</code>).</p>
+<p>If you want fewer messages, you could use <code>RUST_LOG=warn</code> or <code>RUST_LOG=error</code>.</p>
+<h2><a class="header" href="#recommendation" id="recommendation">Recommendation</a></h2>
+<p>Generally the default log level is fine.  It's also nice since you don't have to set any environmental variables!</p>
+<p>If you have very large input files and want to see the most logging, for example to try and estimate the time remaining, you could turn on mode messages with <code>RUST_LOG=trace</code> or <code>RUST_LOG=trace</code>.  It will put a lot of output though.</p>
+<h2><a class="header" href="#setting-config-level-and-number-of-threads" id="setting-config-level-and-number-of-threads">Setting config level and number of threads</a></h2>
+<p>You set the number of threads for OpenBLAS with an environment variable.  If you want to set the log level and the OpenBLAS threads, you can do it like this:</p>
+<pre><code class="language-shell">OPENBLAS_NUM_THREADS=1 RUST_LOG=debug divnet-rs /path/to/config.toml
+</code></pre>
+<p>See <a href="./config_files.html">Config Files</a> for more info on the OpenBLAS thread options.</p>
+<h1><a class="header" href="#examples--tutorial" id="examples--tutorial">Examples &amp; Tutorial</a></h1>
+<p>In this section, I will show you were to find examples and tutorials for running <code>divnet-rs</code>.</p>
+<h1><a class="header" href="#examples" id="examples">Examples</a></h1>
+<p>There are a couple of examples to help you get started in the <a href="https://github.com/mooreryan/divnet-rs/tree/master/test_files">test_files directory on GitHub</a>.</p>
+<p>In that directory, you will find a bunch of test data, input files, and config files.  You can use these to get an idea of what kind of input data <code>divnet-rs</code> needs.</p>
+<h1><a class="header" href="#full-tutorial" id="full-tutorial">Full Tutorial</a></h1>
+<p>You can find the scripts and data for this walk-through <a href="https://github.com/mooreryan/divnet-rs/tree/master/test_files/lee_data_walkthrough">on the GitHub page</a>.</p>
+<p>DELETE? There, I show you how to analyze the Lee dataset included with the DivNet R package with <code>divnet-rs</code>, including getting data out of R into the format that <code>divnet-rs</code> wants, running <code>divnet-rs</code>, and then importing data back in to how and how to use it.</p>
+<h1><a class="header" href="#comparing-divnet-and-divnet-rs" id="comparing-divnet-and-divnet-rs">Comparing DivNet and divnet-rs</a></h1>
+<p>I will use the Lee data grouped by phylum as in the <a href="https://github.com/adw96/DivNet/blob/31e04e29e4f3c02ea07c7f35873ee6743b79170a/vignettes/getting-started.Rmd">DivNet docs</a>.</p>
+<h2><a class="header" href="#run-divnet-and-generate-divnet-rs-input-files" id="run-divnet-and-generate-divnet-rs-input-files">Run DivNet and generate divnet-rs input files</a></h2>
+<p>First you should check out <a href="https://github.com/mooreryan/divnet-rs/tree/master/test_files/lee_data_walkthrough/1_lee_phylum.R">1_lee_phylum.R</a>.  It is an R script for running DivNet on the Lee data aggregated by phylum.  It also generates the data that will be used fir <code>divnet-rs</code>.</p>
+<h2><a class="header" href="#run-divnet-rs" id="run-divnet-rs">Run divnet-rs</a></h2>
+<p>Now you can run <code>divnet-rs</code> using the <a href="https://github.com/mooreryan/divnet-rs/tree/master/test_files/lee_data_walkthrough/2_lee_phylum_config.toml">2_lee_phylum_config.toml</a> config file.  Something like this:</p>
+<pre><code>divnet-rs ./test_files/lee_data_walkthrough/2_lee_phylum_config.toml
+</code></pre>
+<p>You will notice that it is faster, but I just want to make it clear that on a dataset as small as this one I would use the the R version of DivNet.  Generally, you would only be using <code>divnet-rs</code> if whatever you want to do is impossible in the R version!</p>
+<h2><a class="header" href="#import-divnet-rs-output-back-into-r" id="import-divnet-rs-output-back-into-r">Import divnet-rs output back into R</a></h2>
+<p>To see how to import the data back in to R so you can work with it, check out <a href="https://github.com/mooreryan/divnet-rs/tree/master/test_files/lee_data_walkthrough/3_import_divnet_rs_data.R">3_import_divnet_rs_data.R</a>.</p>
+<h2><a class="header" href="#wrap-up" id="wrap-up">Wrap up</a></h2>
+<p>To try it out, assuming you haven't rearranged anything in the <code>divnet-rs</code> source directory, you can run the commands like this:</p>
+<pre><code>Rscript ./docs/lee_data/1_lee_phylum.R
+
+OPENBLAS_NUM_THREADS=1 divnet-rs ./docs/lee_data/2_lee_phylum_config.toml
+
+Rscript ./docs/lee_data/3_import_divnet_rs_data.R
+</code></pre>
+<p>Note the <code>OPENBLAS_NUM_THREADS=1</code> part in front of the <code>divnet-rs</code> command.  In my tests, forcing OpenBLAS to use a single thread results in much better <code>divnet-rs</code> performance.  See <a href="./config_files.html#number-of-threads">this section of the divnet-rs manual</a> for more information about this.</p>
+<h3><a class="header" href="#plots" id="plots">Plots</a></h3>
+<p>And here are the plots!  One thing that you will notice is that the error bars are a bit different.  This is because the MC-MH algorithm DivNet uses (and thus that <code>divnet-rs</code> uses) is dependent on random number generation.  So you'll get some noise run-to-run.</p>
+<h4><a class="header" href="#divnet" id="divnet">DivNet</a></h4>
+<p><img src="./images/lee_phylum_divnet_plot.png" alt="Lee phylum DivNet" /></p>
+<h4><a class="header" href="#divnet-rs-1" id="divnet-rs-1">divnet-rs</a></h4>
+<p><img src="./images/lee_phylum_divnet_rs_plot.png" alt="Lee phylum divnet-rs" /></p>
+<h1><a class="header" href="#important-differences-from-reference-implementation" id="important-differences-from-reference-implementation">Important differences from reference implementation</a></h1>
+<p>DivNet and <code>divnet-rs</code> are very similar and use the same algorithms.  However,
+there are some differences.  I mention some of the important ones here.</p>
+<h2><a class="header" href="#input--output-files-1" id="input--output-files-1">Input &amp; Output files</a></h2>
+<p>The input and output files are different.  To see how to get files into
+<code>divnet-rs</code> from R and then back in to R once <code>divnet-rs</code> is finished, see the
+scripts in the <a href="./lee_data">Lee example directory</a>.</p>
+<h2><a class="header" href="#diagonal-network-only" id="diagonal-network-only">Diagonal network only</a></h2>
+<p>The only network option is <code>diagonal</code>.  Here is an
+<a href="https://github.com/adw96/DivNet/issues/32#issuecomment-521727997">quote from Amy Willis</a>
+that supports this decision:</p>
+<blockquote>
+<p>I would recommend network=&quot;diagonal&quot; for a dataset of this size. This means
+you're allowing overdispersion (compared to a plugin aka multinomial model) but
+not a network structure. This isn't just about computational expense -- it's
+about the reliability of the network estimates. Essentially estimating network
+structure on 20k variables (taxa) with 50 samples with any kind of reliability
+is going to be very challenging, and I don't think that it's worth doing here.
+In our simulations we basically found that overdispersion contributes the bulk
+of the variance to diversity estimation (i.e. overdispersion is more important
+than network structure), so I don't think you are going to lose too much anyway.</p>
+</blockquote>
+<p>The <a href="https://github.com/adw96/DivNet/issues/32">whole issue</a> is worth reading.</p>
+<p>If you have small enough datasets that the
+<a href="https://github.com/adw96/DivNet">R implemntation of DivNet</a> can handle them,
+just use that instead...it will let you estimate the network structure of your 
+data!</p>
+<h2><a class="header" href="#bootstrapping" id="bootstrapping">Bootstrapping</a></h2>
+<p>Only the parametric bootstrap is available.  You cannot do the nonparametric
+bootstrap.</p>
+<h2><a class="header" href="#monte-carlo-iterations-and-burn" id="monte-carlo-iterations-and-burn">Monte-Carlo iterations and burn</a></h2>
+<p>The MC iterations must be even, and the MC burn must be 1/2 of the MC
+iterations.  This allows me to do a little trick to cut the overall memory usage
+by about 1/3.</p>
+<h1><a class="header" href="#citing-divnet" id="citing-divnet">Citing DivNet</a></h1>
+<p><code>divnet-rs</code> is based on the DivNet, an R package to estimate diversity when taxa in the community co-occur via a ecological network.</p>
+<p>If you use DivNet, please support the authors and <a href="https://doi.org/10.1093/biostatistics/kxaa015">cite their manuscript</a>!</p>
+<blockquote>
+<p>Willis, A.D. and Martin, B.D. (2020) DivNet: Estimating diversity in networked communities. Biostatistics. doi.org/10.1093/biostatistics/kxaa015</p>
+</blockquote>
+<h1><a class="header" href="#more-useful-information" id="more-useful-information">More useful information</a></h1>
+<p>For more background information and the theory behind DivNet, please check out the <a href="https://github.com/adw96/DivNet">original DivNet repository</a> and the <a href="https://doi.org/10.1093/biostatistics/kxaa015">DivNet manuscript</a>.</p>
+<p>You can find the <code>divnet-rs</code> source code on <a href="https://github.com/mooreryan/divnet-rs">GitHub</a>.</p>
+<p>I wrote a <a href="https://www.tenderisthebyte.com/blog/2021/01/18/divnet-rust-implementation/">blog post</a> introducing <code>divnet-rs</code>.  It it, I give more background information on the problems that DivNet attempts to solve and how it tries to solve them, talk a bit more about the differences in the Rust and R implementations, and do some benchmark comparisons between the two implementations.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+
+                
+            </nav>
+
+        </div>
+
+        
+        <!-- Livereload script (if served using the cli tool) -->
+        <script type="text/javascript">
+            var socket = new WebSocket("ws://localhost:3000/__livereload");
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+        
+        <script type="text/javascript">
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+        
+        
+
+    </body>
+</html>
