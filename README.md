@@ -8,10 +8,7 @@ Please see the [GitHub repository for the reference implementation](https://gith
 
 ## Installation & Usage
 
-See the [docs](./TODO) directory included in this repository for information on
-how to install and run `divnet-rs`, how to get your data from R (and possibly
-phyloseq) into a format that `divnet-rs` can handle, and how to get your data
-*back* into R so you can get on with your research!
+For installation and usage instructions, please see the [divnet-rs book](https://mooreryan.github.io/divnet-rs-book/).
 
 ## Citation
 
