@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.1] -- 2021-01-22
+
 ### Changed
 
 - Reduced memory usage and data copying.
@@ -14,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Move documentation from the `./docs` directory into a new repository.  This sets up using `mdBook` for generating nice online documentation.
 - Fixed some Clippy warnings.
 
-## [0.2.0] -- 2020-01-19
+## [0.2.0] -- 2021-01-19
 
 ### Added
 
@@ -33,7 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Changed the way the MC iterations are stored.  Now `divnet-rs` uses 1/3 less RAM than before!
 - Updated the `rand` crate dependencies.
 
-## [0.1.1] -- 2020-01-16
+## [0.1.1] -- 2021-01-16
 
 ### Added 
 
@@ -54,7 +56,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Initial commit!
 
 
-[Unreleased]: https://github.com/mooreryan/divnet-rs/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/mooreryan/divnet-rs/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/mooreryan/divnet-rs/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/mooreryan/divnet-rs/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/mooreryan/divnet-rs/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/mooreryan/divnet-rs/releases/tag/v0.1.0
