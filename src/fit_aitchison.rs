@@ -443,7 +443,7 @@ unsafe fn _sigma_sum_function(mc_iter_matrix: &Matrix, eY: &Matrix) -> Matrix {
         .expect("matrix mult failed ...oops!")
 }
 
-fn update_result(ldc: usize, n: usize, c: Vec<f64>) -> Matrix {
+fn _update_result(ldc: usize, n: usize, c: Vec<f64>) -> Matrix {
     // Now need to make matrix from c.
     let mut result = Matrix::from_data(ldc, n, c).unwrap();
 
@@ -498,11 +498,17 @@ unsafe fn _sigma_sum_function_dsyrk_ata(mc_iter_matrix: &Matrix, eY: &Matrix) ->
         uplo, trans, n as i32, k as i32, alpha, &a, lda as i32, beta, &mut c, ldc as i32,
     );
 
-    update_result(ldc, n, c)
+    _update_result(ldc, n, c)
+}
+
+struct DsyrkReturn {
+    nrows: usize,
+    ncols: usize,
+    data: Vec<f64>,
 }
 
 // This one does AA'
-unsafe fn sigma_sum_function_dsyrk_aat(mc_iter_matrix: &Matrix, eY: &Matrix) -> Matrix {
+unsafe fn sigma_sum_function_dsyrk_aat(mc_iter_matrix: &Matrix, eY: &Matrix) -> DsyrkReturn {
     let tmp = mc_iter_matrix.ewise_sub(&eY);
 
     // use upper part
@@ -537,7 +543,13 @@ unsafe fn sigma_sum_function_dsyrk_aat(mc_iter_matrix: &Matrix, eY: &Matrix) -> 
         uplo, trans, n as i32, k as i32, alpha, &a, lda as i32, beta, &mut c, ldc as i32,
     );
 
-    update_result(ldc, n, c)
+    // update_result(ldc, n, c)
+
+    DsyrkReturn {
+        nrows: ldc,
+        ncols: n,
+        data: c,
+    }
 }
 
 fn update_mean(previous_mean: f64, x: f64, xi: usize) -> f64 {
@@ -644,53 +656,51 @@ fn update_sigma(
     config: &FitAitchisonConfig,
 ) {
     assert_eq!(config.mc_iter - config.mc_burn, config.mc_iter / 2);
-
-    // update sigma....here is where we need the NS x NT-1 matrices that are produced by MC
-    // iters.  There will be MCiters of them to deal with.
     assert_eq!(mc_iter_logratios.len(), config.mc_iter - config.mc_burn);
-    // ignore burnt iters
-
     assert_eq!(sigma.dim(), (ntaxa - 1, ntaxa - 1));
 
     log::trace!("`update_sigma` step 1");
 
-    let mut updated_sigma = Matrix::zeros(sigma.nrows(), sigma.ncols());
+    let mut updated_sigma = vec![0.; sigma.nrows() * sigma.ncols()];
     for mci in 0..(config.mc_iter - config.mc_burn) {
-        // config.mc_burn..mc_iter_logratios.len() {
         let mc_lrs = &mc_iter_logratios[mci];
         assert_eq!(mc_lrs.dim(), (ntaxa - 1, nsamples));
         assert_eq!(expected_logratios.dim(), (ntaxa - 1, nsamples));
 
-        let new_sig = unsafe { sigma_sum_function_dsyrk_aat(&mc_lrs, &expected_logratios) };
-        assert_eq!(new_sig.dim(), updated_sigma.dim());
+        let current_sigma = unsafe { sigma_sum_function_dsyrk_aat(&mc_lrs, &expected_logratios) };
+        assert_eq!(updated_sigma.len(), current_sigma.data.len());
+        assert_eq!((current_sigma.nrows, current_sigma.ncols), sigma.dim());
 
-        // add this to some weird temp sigma thingy
-        for j in 0..updated_sigma.ncols() {
-            for i in 0..updated_sigma.nrows() {
-                unsafe {
-                    let old_val = updated_sigma.get_unchecked(i, j);
-
-                    updated_sigma.set_unchecked(i, j, old_val + new_sig.get_unchecked(i, j));
-                }
-            }
-        }
+        updated_sigma
+            .iter_mut()
+            .zip(&current_sigma.data)
+            .for_each(|(sigma, &current_val)| *sigma += current_val);
     }
 
     log::trace!("`update_sigma` step 2");
 
-    let mut updated_sigma_mean = Matrix::zeros(sigma.nrows(), sigma.ncols());
-    for j in 0..updated_sigma_mean.ncols() {
-        for i in 0..updated_sigma_mean.nrows() {
-            unsafe {
-                let mean = updated_sigma.get_unchecked(i, j)
-                    / (nsamples * (config.mc_iter - config.mc_burn)) as f64;
-                updated_sigma_mean.set_unchecked(i, j, mean);
+    updated_sigma
+        .iter_mut()
+        .for_each(|sigma| *sigma /= (nsamples * (config.mc_iter - config.mc_burn)) as f64);
+
+    // Now update sigma.
+    let updated_sigma = Matrix::from_data(sigma.nrows(), sigma.ncols(), updated_sigma)
+        .expect("couldn't convert updated_sigma to matrix");
+
+    for j in 0..sigma.ncols() {
+        for i in 0..sigma.nrows() {
+            if i > j {
+                // Need to copy the upper triangle to the lower triangle.
+                unsafe {
+                    sigma.set_unchecked(i, j, updated_sigma.get_unchecked(j, i));
+                }
+            } else {
+                unsafe {
+                    sigma.set_unchecked(i, j, updated_sigma.get_unchecked(i, j));
+                }
             }
         }
     }
-
-    // Actually update sigma.
-    *sigma = updated_sigma_mean;
 }
 
 pub fn get_sigma_em(num_taxa: usize, fa_tmp: &FitAitTmp, config: &FitAitchisonConfig) -> Matrix {
