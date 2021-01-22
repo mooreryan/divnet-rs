@@ -367,7 +367,7 @@ fn mcmat<R: Rng>(
         );
 
         // Starting value is Y
-        let mut Yi = Y.col(sample_idx).clone().to_vec();
+        let mut Yi = Y.col(sample_idx).to_vec();
         let mut Yi_mean = vec![0.; ntaxa - 1];
 
         for true_mci in 0..config.mc_iter {
@@ -501,15 +501,20 @@ unsafe fn _sigma_sum_function_dsyrk_ata(mc_iter_matrix: &Matrix, eY: &Matrix) ->
     _update_result(ldc, n, c)
 }
 
-struct DsyrkReturn {
-    nrows: usize,
-    ncols: usize,
-    data: Vec<f64>,
-}
-
 // This one does AA'
-unsafe fn sigma_sum_function_dsyrk_aat(mc_iter_matrix: &Matrix, eY: &Matrix) -> DsyrkReturn {
-    let tmp = mc_iter_matrix.ewise_sub(&eY);
+unsafe fn sigma_sum_function_dsyrk_aat(
+    mc_iter_matrix: &Matrix,
+    eY: &Matrix,
+    lr_subtraction_tmp: &mut Matrix,
+    mut current_sigma: &mut [f64],
+) {
+    assert!(lr_subtraction_tmp.dim() == mc_iter_matrix.dim() && mc_iter_matrix.dim() == eY.dim());
+
+    lr_subtraction_tmp
+        .data
+        .iter_mut()
+        .zip(mc_iter_matrix.data().iter().zip(eY.data()))
+        .for_each(|(tmp, (&mc_val, &eY_val))| *tmp = mc_val - eY_val);
 
     // use upper part
     let uplo = b'U';
@@ -519,15 +524,15 @@ unsafe fn sigma_sum_function_dsyrk_aat(mc_iter_matrix: &Matrix, eY: &Matrix) -> 
 
     // order of the matrix C (ie the output)
     // A * A' so nrows x ncols X ncols x nrows (of A ie result is NT-1 x NT-1)
-    let n = tmp.nrows();
+    let n = lr_subtraction_tmp.nrows();
 
     // since trans is N, then k is ncols of A
-    let k = tmp.ncols();
+    let k = lr_subtraction_tmp.ncols();
 
     // scalar to multiply:  alpha * A' * A
     let alpha = 1.;
 
-    let a = tmp.data();
+    let a = lr_subtraction_tmp.data();
 
     // leading dimension is n because trans is 'N'
     let lda = n;
@@ -537,19 +542,24 @@ unsafe fn sigma_sum_function_dsyrk_aat(mc_iter_matrix: &Matrix, eY: &Matrix) -> 
 
     // this is to hold the output
     let ldc = n;
-    let mut c = vec![0.; ldc * n];
+    // let mut c = vec![0.; ldc * n];
+    assert_eq!(ldc * n, current_sigma.len());
+
+    // Zero it.
+    current_sigma.iter_mut().for_each(|x| *x = 0.);
 
     dsyrk(
-        uplo, trans, n as i32, k as i32, alpha, &a, lda as i32, beta, &mut c, ldc as i32,
+        uplo,
+        trans,
+        n as i32,
+        k as i32,
+        alpha,
+        &a,
+        lda as i32,
+        beta,
+        &mut current_sigma,
+        ldc as i32,
     );
-
-    // update_result(ldc, n, c)
-
-    DsyrkReturn {
-        nrows: ldc,
-        ncols: n,
-        data: c,
-    }
 }
 
 fn update_mean(previous_mean: f64, x: f64, xi: usize) -> f64 {
@@ -661,19 +671,29 @@ fn update_sigma(
 
     log::trace!("`update_sigma` step 1");
 
+    let mut lr_subtraction_tmp =
+        Matrix::zeros(expected_logratios.nrows(), expected_logratios.ncols());
+    let mut current_sigma = vec![0.; expected_logratios.nrows() * expected_logratios.nrows()];
+
     let mut updated_sigma = vec![0.; sigma.nrows() * sigma.ncols()];
     for mci in 0..(config.mc_iter - config.mc_burn) {
         let mc_lrs = &mc_iter_logratios[mci];
         assert_eq!(mc_lrs.dim(), (ntaxa - 1, nsamples));
         assert_eq!(expected_logratios.dim(), (ntaxa - 1, nsamples));
 
-        let current_sigma = unsafe { sigma_sum_function_dsyrk_aat(&mc_lrs, &expected_logratios) };
-        assert_eq!(updated_sigma.len(), current_sigma.data.len());
-        assert_eq!((current_sigma.nrows, current_sigma.ncols), sigma.dim());
+        unsafe {
+            sigma_sum_function_dsyrk_aat(
+                &mc_lrs,
+                &expected_logratios,
+                &mut lr_subtraction_tmp,
+                &mut current_sigma,
+            )
+        };
 
         updated_sigma
             .iter_mut()
-            .zip(&current_sigma.data)
+            .zip(&current_sigma)
+            // TODO do i need to move the division in here for numerical accuracy?  It's slower to do so.
             .for_each(|(sigma, &current_val)| *sigma += current_val);
     }
 
