@@ -52,11 +52,7 @@ pub fn mvrnorm<R: Rng>(rng: &mut R, num_observations: usize, mu: &[f64], sigma: 
                         let vals = Matrix::from_diag(&vals);
                         let tmp = eigen_result.vectors.mmul(&vals).unwrap();
 
-                        // TODO need to transpose normal_values?
-                        let hehe = tmp.mmul(&normal_values).unwrap();
-
-                        // hehe.transpose()
-                        hehe
+                        tmp.mmul(&normal_values).unwrap()
                     }
                     Err(_eigen_err) => {
                         panic!("the spectral decomp also failed :(");

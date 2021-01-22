@@ -7,9 +7,6 @@ pub mod ewise;
 
 use std::fmt;
 
-// #[macro_use]
-use approx;
-
 pub const TRANSPOSE: u8 = b'T';
 pub const NO_TRANSPOSE: u8 = b'N';
 
