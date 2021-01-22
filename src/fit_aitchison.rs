@@ -581,6 +581,22 @@ unsafe fn sigma_sum_function_dsyrk_aat(mc_iter_matrix: &Matrix, eY: &Matrix) -> 
     update_result(ldc, n, c)
 }
 
+fn streaming_mean(xs: &[f64]) -> f64 {
+    // i is a 0-based index.
+    let current_mean = |previous_mean, x, i| previous_mean + ((x - previous_mean) / (i + 1) as f64);
+
+    match xs.len() {
+        0 => panic!("cannot take mean of empty array"),
+        1 => xs[0],
+        _ => {
+            let start_mean = xs[0];
+            xs.iter()
+                .enumerate()
+                .fold(start_mean, |mean, (i, x)| current_mean(mean, x, i))
+        }
+    }
+}
+
 /// Takes mean value of each taxa across the MCIters.
 fn make_Y_new(
     nsamples: usize,
@@ -1092,6 +1108,28 @@ mod tests {
     use std::f64;
 
     const TOL: f64 = 1e-5;
+
+    // TODO replace with property tests.
+    #[test]
+    fn streaming_mean_works() {
+        let naive_mean = |xs: &[f64]| xs.iter().sum::<f64>() / xs.len() as f64;
+
+        let v = vec![1.];
+        approx::assert_abs_diff_eq!(streaming_mean(&v), naive_mean(&v), epsilon = 0.05);
+
+        let v = vec![1., 2.];
+        approx::assert_abs_diff_eq!(streaming_mean(&v), naive_mean(&v), epsilon = 0.05);
+
+        let v = vec![1., 2., -1., 0.];
+        approx::assert_abs_diff_eq!(streaming_mean(&v), naive_mean(&v), epsilon = 0.05);
+    }
+
+    #[test]
+    #[should_panic]
+    fn streaming_mean_panics_on_empty_array() {
+        let v: Vec<f64> = vec![];
+        streaming_mean(&v);
+    }
 
     // All the tests have .transpose() as orignally the data was NS x NT to match DivNet.  But now
     // it processes data as NT x NS.  But I didn't want to change all the examples!
