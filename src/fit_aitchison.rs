@@ -323,20 +323,21 @@ fn make_mc_iter_lr_container(size: usize, nsamples: usize, ntaxa: usize) -> Vec<
 /// `config` configuration values for the function!
 fn mcmat<R: Rng>(
     mut rng: &mut R,
-    Yi_MH_container: &mut Vec<Matrix>,
     mc_iter_logratios: &mut Vec<Matrix>,
     Y: &Matrix,
     W: &Matrix,
     eY: &Matrix,
     sigma: &Matrix,
     config: &FitAitchisonConfig,
-) {
+) -> Matrix {
     let ntaxa = W.nrows();
     let nsamples = W.ncols();
 
     assert_eq!(Y.dim(), (ntaxa - 1, nsamples));
     assert_eq!(eY.dim(), Y.dim());
     assert_eq!(sigma.dim(), (ntaxa - 1, ntaxa - 1));
+
+    let mut Yi_MH = Matrix::zeros(ntaxa - 1, nsamples);
 
     // mean 0, standard deviation config.stepsize
     let normal = Normal::new(0.0, config.stepsize).unwrap();
@@ -350,27 +351,10 @@ fn mcmat<R: Rng>(
     let sigInv_vec = diagonal_network_vec(&sigma);
     assert_eq!(sigInv_vec.len(), ntaxa - 1);
 
-    // TODO don't bother tracking acceptance.
-    // This will contain NS Matrices of MCI x NT matrices (the first col of each of
-    // these will be acceptance)
-    // let mut Yi_MH_container: Vec<Matrix> = Vec::new();
-
-    // // This will contain MCI matrices of NT-1 x NS matrices.  Each one is one MC iteration of
-    // // logratio estimates. Need these to update sigma.
-    // let mut mc_iter_logratios: Vec<Matrix> =
-    //     make_mc_iter_lr_container(config.mc_iter, nsamples, ntaxa);
-
     log::debug!("Processing samples in MC mat");
     for sample_idx in 0..nsamples {
+        // sample_idx is a column of Yi_MH_container
         log::trace!("Working on sample {} of {}", sample_idx + 1, nsamples);
-
-        // let sample_start_time = SystemTime::now();
-
-        // NT-1 x MCI.  Each taxa has MCI iters of Yi estimates.
-        // let mut Yi_MH = Matrix::zeros(ntaxa - 1, config.mc_iter);
-        let Yi_MH = &mut Yi_MH_container[sample_idx];
-        assert_eq!(Yi_MH.ncols(), config.mc_iter - config.mc_burn);
-        assert_eq!(Yi_MH.ncols(), config.mc_burn);
 
         // todo will need to crash with better msg on weird user input for these!
         assert!(config.mc_iter > 1, "MC iters must be > 0");
@@ -382,6 +366,10 @@ fn mcmat<R: Rng>(
             "MC iter must be 2 * MC burn "
         );
 
+        // Starting value is Y
+        let mut Yi = Y.col(sample_idx).clone().to_vec();
+        let mut Yi_mean = vec![0.; ntaxa - 1];
+
         for true_mci in 0..config.mc_iter {
             let in_burn_stage = true_mci < config.mc_burn;
 
@@ -391,27 +379,6 @@ fn mcmat<R: Rng>(
             } else {
                 // in the keep stage
                 true_mci - config.mc_burn
-            };
-
-            // Depending on the iteration, either take original Y, or previous Yi, or ___.
-            let Yi = if mci == 0 && in_burn_stage {
-                // First mc iter we take the actual Y values for this row.
-                Y.col(sample_idx)
-            } else if mci == 0 {
-                // We are NOT in burn stage.  First iter of keep stage.
-                //
-                // Get the previous Yi_MH.  It is at the end of the storage.
-                assert_eq!(
-                    config.mc_burn,
-                    Yi_MH.ncols(),
-                    "mc_burn should equal Yi_MH.cols()"
-                );
-                let last_iteration = Yi_MH.ncols() - 1;
-                Yi_MH.col(last_iteration)
-            } else {
-                // The rest of the mc iters, we take the result of the last iteration.
-                let last_iteration = mci - 1;
-                Yi_MH.col(last_iteration)
             };
 
             let Wi = W.col(sample_idx);
@@ -431,52 +398,44 @@ fn mcmat<R: Rng>(
             let acceptance = get_acceptance(Eq5pt1, Eq5pt2, Eq5pt3, Eq5pt4);
             let accepted = is_accepted(acceptance, &uniform, &mut rng);
 
-            assert_eq!(Yi_MH.nrows(), Yi_star.len());
+            // assert_eq!(Yi_MH.nrows(), Yi_star.len());
             assert_eq!(mc_iter_logratios.len(), config.mc_iter - config.mc_burn);
             assert_eq!(mc_iter_logratios[0].dim(), (ntaxa - 1, nsamples));
+
             if accepted {
-                for taxa_idx in 0..Yi_MH.nrows() {
-                    let val = Yi_star[taxa_idx];
+                assert_eq!(Yi_star.len(), Yi.len());
 
-                    Yi_MH.set(taxa_idx, mci, val);
+                // todo replace with let Yi = Yi_star;
+                Yi.iter_mut().zip(Yi_star).for_each(|(old, new)| *old = new);
+            }
 
-                    mc_iter_logratios[mci].set(taxa_idx, sample_idx, val);
-                }
-            } else {
-                for taxa_idx in 0..Yi_MH.nrows() {
-                    //let val = Yi[taxa_idx];
-                    //let val = 10101.;
+            for (taxa_idx, &y_val) in Yi.iter().enumerate() {
+                mc_iter_logratios[mci].set(taxa_idx, sample_idx, y_val);
+            }
 
-                    // TODO this extra check is yucky!
-                    let val = if mci == 0 && in_burn_stage {
-                        // get the original counts...this is truly the first iter.
-                        Y.get(taxa_idx, sample_idx)
-                    } else if mci == 0 {
-                        // We are in the keep stage....the lat iter is the END of the Yi_MH since it
-                        // only holds enough space for the real counts.
-                        let last_itr = Yi_MH.ncols() - 1;
-
-                        Yi_MH.get(taxa_idx, last_itr)
-                    } else {
-                        let last_itr = mci - 1;
-
-                        Yi_MH.get(taxa_idx, last_itr)
-                    };
-
-                    Yi_MH.set(taxa_idx, mci, val);
-
-                    mc_iter_logratios[mci].set(taxa_idx, sample_idx, val);
-                }
+            if true_mci == config.mc_burn {
+                // first non_burn interation.  Mean is the current value of the tracker.
+                Yi_mean
+                    .iter_mut()
+                    .zip(&Yi)
+                    .for_each(|(mean, &yi_val)| *mean = yi_val);
+            } else if true_mci > config.mc_burn {
+                // then we need to update the running mean.
+                Yi_mean.iter_mut().zip(&Yi).for_each(|(mean, &yi_val)| {
+                    *mean = update_mean(*mean, yi_val, mci);
+                });
             }
         }
 
-        // Yi_MH_container.push(Yi_MH);
+        // Set Yi_MH_container
+        for (i, &val) in Yi_mean.iter().enumerate() {
+            Yi_MH.set(i, sample_idx, val);
+        }
     }
 
-    // mc_iter_logratios
+    Yi_MH
 }
 
-// TODO make this nicer...it's copied from original code now.
 unsafe fn _sigma_sum_function(mc_iter_matrix: &Matrix, eY: &Matrix) -> Matrix {
     let tmp = mc_iter_matrix.ewise_sub(&eY);
 
@@ -581,10 +540,12 @@ unsafe fn sigma_sum_function_dsyrk_aat(mc_iter_matrix: &Matrix, eY: &Matrix) -> 
     update_result(ldc, n, c)
 }
 
-fn streaming_mean(xs: &[f64]) -> f64 {
-    // i is a 0-based index.
-    let current_mean = |previous_mean, x, i| previous_mean + ((x - previous_mean) / (i + 1) as f64);
+fn update_mean(previous_mean: f64, x: f64, xi: usize) -> f64 {
+    previous_mean + ((x - previous_mean) / (xi + 1) as f64)
+}
 
+fn _streaming_mean(xs: &[f64]) -> f64 {
+    // i is a 0-based index.
     match xs.len() {
         0 => panic!("cannot take mean of empty array"),
         1 => xs[0],
@@ -592,45 +553,9 @@ fn streaming_mean(xs: &[f64]) -> f64 {
             let start_mean = xs[0];
             xs.iter()
                 .enumerate()
-                .fold(start_mean, |mean, (i, x)| current_mean(mean, x, i))
+                .fold(start_mean, |mean, (i, &x)| update_mean(mean, x, i))
         }
     }
-}
-
-/// Takes mean value of each taxa across the MCIters.
-fn make_Y_new(
-    nsamples: usize,
-    ntaxa: usize,
-    Yi_MH_container: &Vec<Matrix>,
-    config: &FitAitchisonConfig,
-) -> Matrix {
-    // the first column of yi_mh will be acceptance ratio...so let's just ignore that for now
-    let mut Y_new = Matrix::zeros(ntaxa - 1, nsamples);
-    for (sample_idx, yi_mh) in Yi_MH_container.iter().enumerate() {
-        assert_eq!(yi_mh.dim(), (ntaxa - 1, config.mc_iter - config.mc_burn));
-        assert_eq!(config.mc_iter - config.mc_burn, config.mc_iter / 2);
-
-        for taxa_idx in 0..yi_mh.nrows() {
-            let sample_lr_estimates = yi_mh.row(taxa_idx);
-
-            let sum = sample_lr_estimates //[config.mc_burn..config.mc_iter]
-                .iter()
-                .sum::<f64>();
-            let mean = sum / (config.mc_iter - config.mc_burn) as f64;
-
-            // let mut sum = 0.0;
-            // for emi in config.mc_burn..config.mc_iter {
-            //     sum += col[emi];
-            // }
-            //
-            // let mean = sum / (config.mc_iter - config.mc_burn) as f64;
-
-            // Y_new has one fewer col since we ignore acceptance!
-            Y_new.set(taxa_idx, sample_idx, mean);
-        }
-    }
-
-    Y_new
 }
 
 /// `logratios` should be NT-1 x NS.
@@ -971,21 +896,13 @@ pub fn fit_aitchison<R: Rng>(
         // NT-1 x MCI.  Each taxa has MCI iters of Yi estimates.
         // let mut Yi_MH = Matrix::zeros(ntaxa - 1, config.mc_iter);
 
-        // (NT-1) x nsamples x mc_iter
-        let mut Yi_MH_container: Vec<Matrix> = (0..nsamples)
-            // todo technically we burn 1/2 of the mc iters so we could do something tricky to only allocate 1/2 and reuse the same part.  we need to keep them tho i think.
-            .map(|_i| Matrix::zeros(ntaxa - 1, config.mc_iter - config.mc_burn))
-            .collect();
-
         // This will contain MCI matrices of NT-1 x NS matrices.  Each one is one MC iteration of
         // logratio estimates. Need these to update sigma.
         let mut mc_iter_logratios: Vec<Matrix> =
             make_mc_iter_lr_container(config.mc_iter - config.mc_burn, nsamples, ntaxa);
 
-        // also updates Yi_MH_container
-        mcmat(
+        let Y_new = mcmat(
             rng,
-            &mut Yi_MH_container,
             &mut mc_iter_logratios,
             &logratios,
             &counts,
@@ -994,10 +911,7 @@ pub fn fit_aitchison<R: Rng>(
             &config,
         );
 
-        log::trace!("Running `make_Y_new`");
         // Estimated logrations from this round of MCiters
-        // done 1/2
-        let Y_new = make_Y_new(nsamples, ntaxa, &Yi_MH_container, &config);
         assert_eq!(Y_new.dim(), (ntaxa - 1, nsamples));
 
         log::trace!("Running `update_b0`");
@@ -1115,20 +1029,27 @@ mod tests {
         let naive_mean = |xs: &[f64]| xs.iter().sum::<f64>() / xs.len() as f64;
 
         let v = vec![1.];
-        approx::assert_abs_diff_eq!(streaming_mean(&v), naive_mean(&v), epsilon = 0.05);
+        approx::assert_abs_diff_eq!(_streaming_mean(&v), naive_mean(&v), epsilon = TOL);
 
         let v = vec![1., 2.];
-        approx::assert_abs_diff_eq!(streaming_mean(&v), naive_mean(&v), epsilon = 0.05);
+        approx::assert_abs_diff_eq!(_streaming_mean(&v), naive_mean(&v), epsilon = TOL);
 
         let v = vec![1., 2., -1., 0.];
-        approx::assert_abs_diff_eq!(streaming_mean(&v), naive_mean(&v), epsilon = 0.05);
+        approx::assert_abs_diff_eq!(_streaming_mean(&v), naive_mean(&v), epsilon = TOL);
+
+        let v = [
+            0.539573, 0.000037, 0.000035, 0.004132, 0.000031, 0.132480, 0.000032, 0.000659,
+            0.000039, 0.020237, 0.019957, 0.161509, 0.004477, 0.000030, 0.000735, 0.000810,
+            0.000038, 0.084896, 0.019187, 0.011106,
+        ];
+        assert_eq!(_streaming_mean(&v), naive_mean(&v));
     }
 
     #[test]
     #[should_panic]
     fn streaming_mean_panics_on_empty_array() {
         let v: Vec<f64> = vec![];
-        streaming_mean(&v);
+        _streaming_mean(&v);
     }
 
     // All the tests have .transpose() as orignally the data was NS x NT to match DivNet.  But now
@@ -1167,6 +1088,8 @@ mod tests {
 
     #[test]
     fn fit_aitchison_gives_reasonable_result2() {
+        // ntaxa = rows = 4
+        // nsamples = columns = 6
         let count_table = Matrix::from_data(
             4,
             6,
