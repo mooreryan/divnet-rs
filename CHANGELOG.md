@@ -8,7 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Reduced memory usage and data copying.
+  - Use an online mean function for Yi_MH values rather than storing all non-burn iterations.  This saves a good bit of memory.
+  - Reuse pre-allocated vectors and avoid some needless copying in the dsyrk results.  It's saves a bit of runtime and memory.
 - Move documentation from the `./docs` directory into a new repository.  This sets up using `mdBook` for generating nice online documentation.
+- Fixed some Clippy warnings.
 
 ## [0.2.0] -- 2020-01-19
 
