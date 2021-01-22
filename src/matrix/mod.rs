@@ -1412,8 +1412,8 @@ impl Matrix {
     pub fn from_diag(v: &[f64]) -> Matrix {
         let mut ary = Matrix::zeros(v.len(), v.len());
 
-        for j in 0..ary.ncols() {
-            ary.set(j, j, v[j]);
+        for (j, &val) in v.iter().enumerate() {
+            ary.set(j, j, val);
         }
 
         ary
