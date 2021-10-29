@@ -1,5 +1,6 @@
 use blas::dgemm;
 use lapack::{dgels, dpotrf, dsyevr};
+use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub};
 
@@ -18,7 +19,7 @@ pub struct EigenOutput {
     pub vectors: Matrix,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 /// A matrix with ColMajor data storage
 pub struct Matrix {
     /// `data` is owned by the struct.  Size isn't known at compile time.
