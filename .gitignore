@@ -13,3 +13,5 @@ _*
 /massif*
 /test_files/lee/test_250_*.csv
 /test_files/lee/test_500_*.csv
+
+/test_files/lee_phylum/*ROUND
