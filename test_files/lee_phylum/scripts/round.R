@@ -13,7 +13,7 @@ csv_out <- args[[2]]
 csv <- read_csv(csv, comment = "#")
 
 x <- csv[, 1:2]
-y <- apply(csv[, 3:ncol(csv)], 2, signif)
+y <- apply(csv[, 3:ncol(csv)], 2, signif, digits = 6)
 csv <- cbind(x, y)
 
 write_csv(csv, csv_out)
