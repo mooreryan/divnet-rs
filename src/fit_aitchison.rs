@@ -746,7 +746,6 @@ pub fn get_sigma_em(num_taxa: usize, fa_tmp: &FitAitTmp, config: &FitAitchisonCo
         "EM iter must be 2 * EM burn "
     );
 
-    // WAT
     for j in 0..sigma_em.ncols() {
         for i in 0..sigma_em.nrows() {
             let mut vals = Vec::new();
@@ -851,6 +850,21 @@ fn get_beta0(fa_tmp: &FitAitTmp, config: &FitAitchisonConfig) -> Vec<f64> {
     beta0
 }
 
+fn update_sigma_mean(sigma_mean: &mut Matrix, current_sigma: &Matrix, update_i: usize) {
+    // hi
+    assert_eq!(sigma_mean.dim(), current_sigma.dim());
+    for j in 0..sigma_mean.ncols() {
+        for i in 0..sigma_mean.nrows() {
+            unsafe {
+                let previous_mean = sigma_mean.get_unchecked(i, j);
+                let x = current_sigma.get_unchecked(i, j);
+                let new_val = update_mean(previous_mean, x, update_i);
+                sigma_mean.set_unchecked(i, j, new_val);
+            }
+        }
+    }
+}
+
 /// TODO does not validate the values in `config`
 pub fn fit_aitchison<R: Rng>(
     rng: &mut R,
@@ -921,6 +935,9 @@ pub fn fit_aitchison<R: Rng>(
         .transpose()
         .covariance();
     assert_eq!(sigma.dim(), (ntaxa - 1, ntaxa - 1));
+
+    // Zero it rather than copy sigma since we start tracking mean past the burn anyway.
+    let mut sigma_mean = Matrix::zeros(sigma.nrows(), sigma.ncols());
 
     // TODO transpose fa_tmp.b0
     assert_eq!(b0.len(), ntaxa - 1);
@@ -1025,21 +1042,14 @@ pub fn fit_aitchison<R: Rng>(
         log::trace!("Pushing...");
         fa_tmp.b.push(b.clone());
 
-        // TODO rather than save all of them, use an on-line mean?
-        // burn: 3, iter: 6; we want these: em index -- 0, 1, 2, 3*, 4*, 5*
-        //
-        // In the final EM iter, we don't need to clone, we can move it into the vector.  Because of
-        // borrow checker, we do it outside of the EM loop.
-        if em >= config.em_burn && em < config.em_iter - 1 {
-            fa_tmp.sigma.push(sigma.clone());
+        if em >= config.em_burn {
+            // It is okay to update starting from zeros!
+            update_sigma_mean(&mut sigma_mean, &sigma, em - config.em_burn);
         }
 
         log::debug!("em iter {} took {:?}", em + 1, em_start.elapsed().unwrap());
     }
     log::trace!("Just finished EM iters");
-
-    // Push the last (updated) sigma into the vec without cloning.
-    fa_tmp.sigma.push(sigma);
 
     // This is the mean value for all the b0 passed the burn in
     let beta0 = get_beta0(&fa_tmp, &config);
@@ -1053,8 +1063,7 @@ pub fn fit_aitchison<R: Rng>(
     assert_eq!(fitted_y.dim(), (ntaxa - 1, nsamples));
 
     // // NT-1 x NT-1
-    let sigma_em = get_sigma_em(ntaxa, &mut fa_tmp, &config);
-    assert_eq!(sigma_em.dim(), (ntaxa - 1, ntaxa - 1));
+    assert_eq!(sigma_mean.dim(), (ntaxa - 1, ntaxa - 1));
 
     let fitted_z = conversions::to_composition_matrix(&fitted_y, config.base_taxa);
     assert_eq!(fitted_z.dim(), (ntaxa, nsamples));
@@ -1064,7 +1073,7 @@ pub fn fit_aitchison<R: Rng>(
         beta0,
         beta,
         fitted_y,
-        sigma_em,
+        sigma_em: sigma_mean,
         fitted_z,
     };
 
