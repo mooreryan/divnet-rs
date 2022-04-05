@@ -1026,13 +1026,19 @@ pub fn fit_aitchison<R: Rng>(
 
         // TODO rather than save all of them, use an on-line mean?
         // burn: 3, iter: 6; we want these: em index -- 0, 1, 2, 3*, 4*, 5*
-        if em >= config.em_burn {
+        //
+        // In the final EM iter, we don't need to clone, we can move it into the vector.  Because of
+        // borrow checker, we do it outside of the EM loop.
+        if em >= config.em_burn && em < config.em_iter - 1 {
             fa_tmp.sigma.push(sigma.clone());
         }
 
         log::debug!("em iter {} took {:?}", em + 1, em_start.elapsed().unwrap());
     }
     log::trace!("Just finished EM iters");
+
+    // Push the last (updated) sigma into the vec without cloning.
+    fa_tmp.sigma.push(sigma);
 
     // This is the mean value for all the b0 passed the burn in
     let beta0 = get_beta0(&fa_tmp, &config);
