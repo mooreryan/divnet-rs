@@ -366,6 +366,13 @@ fn mcmat<R: Rng>(
             "MC iter must be 2 * MC burn "
         );
 
+        // Also, I'm requiring this so this 1/2 mem hack works.
+        assert_eq!(
+            config.em_iter,
+            config.em_burn * 2,
+            "EM iter must be 2 * EM burn "
+        );
+
         // Starting value is Y
         let mut Yi = Y.col(sample_idx).to_vec();
         let mut Yi_mean = vec![0.; ntaxa - 1];
@@ -727,9 +734,22 @@ pub fn get_sigma_em(num_taxa: usize, fa_tmp: &FitAitTmp, config: &FitAitchisonCo
     // NT-1 x NT-1
     let mut sigma_em = Matrix::zeros(num_taxa - 1, num_taxa - 1);
 
+    assert_eq!(
+        fa_tmp.sigma.len(),
+        config.em_burn,
+        "sigma vec should have len em_burn"
+    );
+
+    assert_eq!(
+        config.em_iter,
+        config.em_burn * 2,
+        "EM iter must be 2 * EM burn "
+    );
+
     for j in 0..sigma_em.ncols() {
         for i in 0..sigma_em.nrows() {
-            for emi in (config.em_burn)..(config.em_iter + 1) {
+            // TODO index the collection directly.
+            for emi in 0..config.em_burn {
                 let mut vals = Vec::new();
                 vals.push(fa_tmp.sigma[emi].get(i, j));
 
@@ -909,7 +929,6 @@ pub fn fit_aitchison<R: Rng>(
     }
 
     fa_tmp.b.push(b.clone());
-    fa_tmp.sigma.push(sigma.clone());
 
     log::debug!("Starting EM iters");
     for em in 0..config.em_iter {
@@ -1004,7 +1023,12 @@ pub fn fit_aitchison<R: Rng>(
 
         log::trace!("Pushing...");
         fa_tmp.b.push(b.clone());
-        fa_tmp.sigma.push(sigma.clone());
+
+        // TODO rather than save all of them, use an on-line mean?
+        // burn: 3, iter: 6; we want these: em index -- 0, 1, 2, 3*, 4*, 5*
+        if em >= config.em_burn {
+            fa_tmp.sigma.push(sigma.clone());
+        }
 
         log::debug!("em iter {} took {:?}", em + 1, em_start.elapsed().unwrap());
     }
@@ -1135,7 +1159,7 @@ mod tests {
 
         // TODO when you crank up the em iter and mc iter, this actually seems to get less accurate?
         let config = FitAitchisonConfig {
-            em_iter: 7,
+            em_iter: 6,
             em_burn: 3,
             mc_iter: 200,
             mc_burn: 100,
