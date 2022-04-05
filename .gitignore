@@ -9,3 +9,6 @@ _*
 
 /test_files/*/*output.csv
 /test_files/*/*plot.png
+
+/massif*
+/test_files/lee/test_500_*.csv
