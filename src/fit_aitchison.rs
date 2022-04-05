@@ -680,9 +680,11 @@ fn update_sigma(
 
     let mut lr_subtraction_tmp =
         Matrix::zeros(expected_logratios.nrows(), expected_logratios.ncols());
-    let mut current_sigma = vec![0.; expected_logratios.nrows() * expected_logratios.nrows()];
-
     let mut updated_sigma = vec![0.; sigma.nrows() * sigma.ncols()];
+    // TODO pretty sure this is okay, but check the BLAS docs.
+    let mut current_sigma = sigma.data.as_mut_slice();
+    assert_eq!(current_sigma.len(), updated_sigma.len());
+
     for mci in 0..(config.mc_iter - config.mc_burn) {
         let mc_lrs = &mc_iter_logratios[mci];
         assert_eq!(mc_lrs.dim(), (ntaxa - 1, nsamples));
@@ -699,7 +701,7 @@ fn update_sigma(
 
         updated_sigma
             .iter_mut()
-            .zip(&current_sigma)
+            .zip(current_sigma.iter())
             // TODO do i need to move the division in here for numerical accuracy?  It's slower to do so.
             .for_each(|(sigma, &current_val)| *sigma += current_val);
     }
