@@ -746,16 +746,17 @@ pub fn get_sigma_em(num_taxa: usize, fa_tmp: &FitAitTmp, config: &FitAitchisonCo
         "EM iter must be 2 * EM burn "
     );
 
+    // WAT
     for j in 0..sigma_em.ncols() {
         for i in 0..sigma_em.nrows() {
+            let mut vals = Vec::new();
             // TODO index the collection directly.
             for emi in 0..config.em_burn {
-                let mut vals = Vec::new();
                 vals.push(fa_tmp.sigma[emi].get(i, j));
-
-                let mean = vals.iter().sum::<f64>() / vals.len() as f64;
-                sigma_em.set(i, j, mean);
             }
+
+            let mean = vals.iter().sum::<f64>() / vals.len() as f64;
+            sigma_em.set(i, j, mean);
         }
     }
 
