@@ -1,7 +1,6 @@
 use crate::config::FitAitchisonConfig;
 use crate::conversions;
 use crate::conversions::to_composition_matrix;
-use crate::matrix;
 use crate::matrix::{ewise, Matrix};
 use crate::multinomial;
 use crate::mvrnorm::mvrnorm;
@@ -29,8 +28,6 @@ pub struct FitAitchsonResult {
     pub fitted_z: Matrix,
     pub base: usize,
 }
-
-// TODO it seems like a pretty high proportion of acceptance...should it be?
 
 /// output should be same dim as fitted_y
 fn make_w<R: Rng>(
@@ -128,12 +125,6 @@ pub fn parametric_bootstrap<R: Rng>(
     res
 }
 
-fn _diagonal_network(sigma: &Matrix) -> Matrix {
-    let inverse: Vec<f64> = sigma.diag().iter().map(|&x| 1. / x).collect();
-
-    Matrix::from_diag(&inverse)
-}
-
 fn diagonal_network_vec(sigma: &Matrix) -> Vec<f64> {
     sigma.diag().iter().map(|&x| 1. / x).collect()
 }
@@ -149,27 +140,8 @@ fn remove_at(v: &[f64], idx: usize) -> Vec<f64> {
     new
 }
 
-fn _get_Yi<'a>(sample_j: usize, mci: usize, Y: &'a Matrix, Yi_MH: &'a Matrix) -> &'a [f64] {
-    if mci == 0 {
-        // First mc iter we take the actual Y values for this row.
-        Y.col(sample_j)
-    } else {
-        // The rest of the mc iters, we take the result of the last iteration.
-        let last_iteration = mci - 1;
-
-        Yi_MH.col(last_iteration)
-    }
-}
-
 fn make_Yi_star<R: Rng>(Yi: &[f64], normal: &Normal<f64>, mut rng: &mut R) -> Vec<f64> {
     Yi.iter().map(|&x| x + normal.sample(&mut rng)).collect()
-}
-
-// TODO could speed this up by merging the sum and exp.
-fn _do_Eq5pt1_old(Yi: &[f64], Yi_star: &[f64], Wi: &[f64]) -> f64 {
-    ewise::sum(&Wi)
-        * (f64::ln(ewise::sum(&ewise::exp(&Yi)) + 1.)
-            - f64::ln(ewise::sum(&ewise::exp(&Yi_star)) + 1.))
 }
 
 pub fn do_Eq5pt1(Yi: &[f64], Yi_star: &[f64], Wi: &[f64]) -> f64 {
@@ -278,36 +250,6 @@ fn get_acceptance(Eq5pt1: f64, Eq5pt2: f64, Eq5pt3: f64, Eq5pt4: f64) -> f64 {
 // todo original DivNet code checks acceptance for NaN.
 fn is_accepted<R: Rng>(acceptance: f64, uniform: &Uniform<f64>, mut rng: &mut R) -> bool {
     uniform.sample(&mut rng) < acceptance
-}
-
-// TODO lots of LL data write misses.
-/// lr_estimates is one row of Yi or Yi_star...ie logratios of NT-1 taxa for a single sample.
-fn _update_lr_containers(
-    sample_idx: usize,
-    mci: usize,
-    accepted: bool,
-    lr_estimates: &[f64],
-    Yi_MH: &mut Matrix,
-    mc_iter_logratios: &mut Vec<Matrix>,
-) {
-    assert_eq!(Yi_MH.ncols(), lr_estimates.len() + 1);
-
-    // The first column is acceptance.
-    // TODO don't need to track this.
-    if accepted {
-        Yi_MH.set(mci, 0, 1.)
-    } else {
-        Yi_MH.set(mci, 0, 0.)
-    }
-
-    for j in 1..Yi_MH.ncols() {
-        // Yi_star has one fewer element than Yi_MH.ncols() since the first col of YI_MH
-        // is acceptance.
-        Yi_MH.set(mci, j, lr_estimates[j - 1]);
-
-        // track result for sigma calculations later
-        mc_iter_logratios[mci].set(sample_idx, j - 1, lr_estimates[j - 1]);
-    }
 }
 
 fn make_mc_iter_lr_container(size: usize, nsamples: usize, ntaxa: usize) -> Vec<Matrix> {
@@ -442,71 +384,6 @@ fn mcmat<R: Rng>(
     }
 
     Yi_MH
-}
-
-unsafe fn _sigma_sum_function(mc_iter_matrix: &Matrix, eY: &Matrix) -> Matrix {
-    let tmp = mc_iter_matrix.ewise_sub(&eY);
-
-    tmp.mmul2(&tmp, matrix::TRANSPOSE, matrix::NO_TRANSPOSE)
-        .expect("matrix mult failed ...oops!")
-}
-
-fn _update_result(ldc: usize, n: usize, c: Vec<f64>) -> Matrix {
-    // Now need to make matrix from c.
-    let mut result = Matrix::from_data(ldc, n, c).unwrap();
-
-    assert_eq!(result.ncols(), result.nrows());
-
-    // now need to fill in the lower triangular of result.
-    for j in 0..result.ncols() {
-        for i in 0..result.nrows() {
-            if i > j {
-                unsafe {
-                    result.set_unchecked(i, j, result.get_unchecked(j, i));
-                }
-            }
-        }
-    }
-
-    result
-}
-
-unsafe fn _sigma_sum_function_dsyrk_ata(mc_iter_matrix: &Matrix, eY: &Matrix) -> Matrix {
-    let tmp = mc_iter_matrix.ewise_sub(&eY);
-
-    // use upper part
-    let uplo = b'U';
-
-    // means we want A' * A
-    let trans = b'T';
-
-    // order of the matrix C (ie the output)
-    // A' * A so ncols x nrows X nrows x ncols (of A)
-    let n = tmp.ncols();
-
-    // since trans is T, then k is nrows of A
-    let k = tmp.nrows();
-
-    // scalar to multiply:  alpha * A' * A
-    let alpha = 1.;
-
-    let a = tmp.data();
-
-    // leading dimension is k because trans is 'T'
-    let lda = k;
-
-    // scaler: alpha * A' * A + beta * C
-    let beta = 1.;
-
-    // this is to hold the output
-    let ldc = n;
-    let mut c = vec![0.; ldc * n];
-
-    dsyrk(
-        uplo, trans, n as i32, k as i32, alpha, &a, lda as i32, beta, &mut c, ldc as i32,
-    );
-
-    _update_result(ldc, n, c)
 }
 
 // This one does AA'
@@ -1188,21 +1065,6 @@ mod tests {
         ];
 
         approx::assert_abs_diff_eq!(result.fitted_z.data(), &expected[..], epsilon = 0.05);
-    }
-
-    #[test]
-    fn diagonal_network_makes_diagonal_networks() {
-        let sigma = Matrix::from_data(2, 2, vec![10., 1., 1., 10.])
-            .unwrap()
-            .transpose();
-
-        let actual = _diagonal_network(&sigma);
-
-        let expected = Matrix::from_data(2, 2, vec![0.1, 0., 0., 0.1])
-            .unwrap()
-            .transpose();
-
-        approx::assert_abs_diff_eq!(actual.data(), expected.data(), epsilon = TOL);
     }
 
     #[test]
