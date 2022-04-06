@@ -35,7 +35,7 @@ pub fn multinomial<R: Rng>(mut rng: &mut R, _n: usize, size: usize, probs: &[f64
 mod tests {
     use super::*;
     use approx;
-    use rand_chacha::ChaCha20Rng;
+    use rand_pcg::Pcg64;
     use std::f64;
 
     #[test]
@@ -45,7 +45,7 @@ mod tests {
         // Do a lot of draws to get the accuracy up.
         let size = 100_000 as usize;
 
-        let mut rng = ChaCha20Rng::seed_from_u64(1);
+        let mut rng = Pcg64::seed_from_u64(1);
 
         let draws = multinomial(&mut rng, 1, size, &probs);
 

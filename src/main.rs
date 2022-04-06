@@ -11,7 +11,7 @@ use divnet_rs::io;
 use divnet_rs::opts::Opts;
 use env_logger::Env;
 use rand::SeedableRng;
-use rand_chacha::ChaCha20Rng;
+use rand_pcg::Pcg64;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use structopt::StructOpt;
@@ -37,8 +37,7 @@ fn main() {
         "MC burn must be 1/2 of MC iter"
     );
 
-    // Todo switch to seedable rng
-    let mut rng = ChaCha20Rng::seed_from_u64(config.misc.random_seed);
+    let mut rng = Pcg64::seed_from_u64(config.misc.random_seed);
 
     let (sample_names, taxa_names, otu_table) = io::read_otu_table(&config.io.count_table);
     let (sample_names2, _variable_names, sample_data) =

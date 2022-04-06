@@ -1082,7 +1082,7 @@ mod tests {
     use super::*;
     use approx;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha20Rng;
+    use rand_pcg::Pcg64;
     use std::f64;
 
     const TOL: f64 = 1e-5;
@@ -1142,7 +1142,7 @@ mod tests {
             base_taxa: 0,
         };
 
-        let mut rng = ChaCha20Rng::seed_from_u64(1);
+        let mut rng = Pcg64::seed_from_u64(1);
         let result = fit_aitchison(&mut rng, &count_table, &sample_data, &config);
 
         let expected = vec![0.33, 0.33, 0.33, 0.33, 0.33, 0.33, 0.33, 0.33, 0.33];
@@ -1179,7 +1179,7 @@ mod tests {
             base_taxa: 0,
         };
 
-        let mut rng = ChaCha20Rng::seed_from_u64(1);
+        let mut rng = Pcg64::seed_from_u64(1);
         let result = fit_aitchison(&mut rng, &count_table, &sample_data, &config);
 
         let expected = vec![

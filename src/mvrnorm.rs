@@ -84,7 +84,7 @@ mod tests {
     use super::*;
     use approx;
     use rand::SeedableRng;
-    use rand_chacha::ChaCha20Rng;
+    use rand_pcg::Pcg64;
     use std::f64;
 
     // TODO this test could give some false positives depending on the random numbers generated!
@@ -94,7 +94,7 @@ mod tests {
         let sigma =
             Matrix::from_data(2, 2, vec![0.5165287, -0.2067872, -0.2067872, 2.5308647]).unwrap();
 
-        let mut rng = ChaCha20Rng::seed_from_u64(1);
+        let mut rng = Pcg64::seed_from_u64(1);
 
         // Need a lot of samples to get near the originals.
         let result = mvrnorm(&mut rng, 10000, &mu, &sigma);
