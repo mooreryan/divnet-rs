@@ -377,6 +377,9 @@ fn mcmat<R: Rng>(
         let mut Yi = Y.col(sample_idx).to_vec();
         let mut Yi_mean = vec![0.; ntaxa - 1];
 
+        let Wi = W.col(sample_idx);
+        let Wi_no_base_taxa: Vec<f64> = remove_at(&Wi, config.base_taxa);
+
         for true_mci in 0..config.mc_iter {
             let in_burn_stage = true_mci < config.mc_burn;
 
@@ -388,13 +391,9 @@ fn mcmat<R: Rng>(
                 true_mci - config.mc_burn
             };
 
-            let Wi = W.col(sample_idx);
-            // This one allocates!
-            let Wi_no_base_taxa: Vec<f64> = remove_at(&Wi, config.base_taxa);
             let eYi = eY.col(sample_idx);
 
             // Offset Yi by draws from a normal distribution.
-            // This one allocates!
             let Yi_star: Vec<f64> = make_Yi_star(&Yi, &normal, &mut rng);
 
             let Eq5pt1 = do_Eq5pt1(&Yi, &Yi_star, &Wi);
