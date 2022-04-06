@@ -151,7 +151,6 @@ pub fn do_Eq5pt1(Yi: &[f64], Yi_star: &[f64], Wi: &[f64]) -> f64 {
     Wi.iter().sum::<f64>() * (f64::ln(Yi_exp_sum + 1.) - f64::ln(Yi_star_exp_sum + 1.))
 }
 
-// TODO pretty sure this should take Wi_no_base?
 pub fn do_Eq5pt2(Yi: &[f64], Yi_star: &[f64], Wi_no_base_taxa: &[f64]) -> f64 {
     let len = Yi.len();
     assert_eq!(len, Yi_star.len());
@@ -198,7 +197,7 @@ fn do_Eq5pt3(Yi_star: &[f64], eYi: &[f64], sigInv_vec: &[f64]) -> f64 {
     assert_eq!(Yi_star.len(), eYi.len());
     let Yi_star_minus_eYi = ewise::sub(&Yi_star, &eYi);
     assert_eq!(Yi_star_minus_eYi.len(), sigInv_vec.len());
-    // TODO this (and the orig way can be -inf on the test set.
+    // TODO this (and the orig way can be -inf on the test set).
 
     -0.5 * (0..Yi_star_minus_eYi.len())
         .map(|i| unsafe {
@@ -247,7 +246,6 @@ fn get_acceptance(Eq5pt1: f64, Eq5pt2: f64, Eq5pt3: f64, Eq5pt4: f64) -> f64 {
     }
 }
 
-// todo original DivNet code checks acceptance for NaN.
 fn is_accepted<R: Rng>(acceptance: f64, uniform: &Uniform<f64>, mut rng: &mut R) -> bool {
     uniform.sample(&mut rng) < acceptance
 }
@@ -298,7 +296,7 @@ fn mcmat<R: Rng>(
         // sample_idx is a column of Yi_MH_container
         log::trace!("Working on sample {} of {}", sample_idx + 1, nsamples);
 
-        // todo will need to crash with better msg on weird user input for these!
+        // TODO real error message
         assert!(config.mc_iter > 1, "MC iters must be > 0");
         assert!(config.mc_burn > 1, "MC burn must be > 0");
         // im requiring this so this 1/2 mem hack works
@@ -352,8 +350,6 @@ fn mcmat<R: Rng>(
 
             if accepted {
                 assert_eq!(Yi_star.len(), Yi.len());
-
-                // todo replace with let Yi = Yi_star;
                 Yi.iter_mut().zip(Yi_star).for_each(|(old, new)| *old = new);
             }
 
@@ -667,7 +663,6 @@ fn get_fitted_y(
     fitted_y
 }
 
-// TODO this looks wrong....
 fn get_beta(
     num_variables: usize,
     num_taxa: usize,
@@ -753,8 +748,6 @@ pub fn fit_aitchison<R: Rng>(
 
     let mut fa_tmp = FitAitTmp {
         b: Vec::new(),
-        // TODO should this transpose as well?
-        // b0: Matrix::zeros(config.mc_iter + 1, ntaxa - 1),
         b0: Matrix::zeros(config.em_iter + 1, ntaxa - 1),
         sigma: Vec::new(),
     };
@@ -810,7 +803,6 @@ pub fn fit_aitchison<R: Rng>(
     // Zero it rather than copy sigma since we start tracking mean past the burn anyway.
     let mut sigma_mean = Matrix::zeros(sigma.nrows(), sigma.ncols());
 
-    // TODO transpose fa_tmp.b0
     assert_eq!(b0.len(), ntaxa - 1);
     // store the first of the results
     for (taxa_idx, &x) in b0.iter().enumerate() {
@@ -826,13 +818,6 @@ pub fn fit_aitchison<R: Rng>(
         log::info!("Starting EM iteration {} of {}", em + 1, config.em_iter);
 
         log::trace!("Running `mcmat`");
-        // todo pass in Yi_MH_container?
-        // TODO don't bother tracking acceptance.
-        // This will contain NS Matrices of MCI x NT matrices (the first col of each of
-        // these will be acceptance)
-        // let mut Yi_MH_container000: Vec<Matrix> = Vec::new();
-        // NT-1 x MCI.  Each taxa has MCI iters of Yi estimates.
-        // let mut Yi_MH = Matrix::zeros(ntaxa - 1, config.mc_iter);
 
         // This will contain MCI matrices of NT-1 x NS matrices.  Each one is one MC iteration of
         // logratio estimates. Need these to update sigma.
@@ -857,8 +842,6 @@ pub fn fit_aitchison<R: Rng>(
         update_b0(&mut b0, &Y_new);
 
         log::trace!("Running `update_sigma`");
-        // TODO orig code has it this way, but why isn't the updated expected logratios used here?
-        // done 1/2
         update_sigma(
             nsamples,
             ntaxa,
@@ -879,23 +862,17 @@ pub fn fit_aitchison<R: Rng>(
         }
 
         log::trace!("Running `get_b`");
-        // TODO this is repeated about 50 lines up...before the em iters start.
 
-        // TODO This one allocates a new b matrix rather than overwriting the old one
         b = unsafe { get_b(&centered_covariates, &Y_new.center(false)) };
-        //b = unsafe { get_b(&centered_covariates, &Y_new) }; // todo why not centered here?  idk but it works
         assert_eq!(b.dim(), (nvars, ntaxa - 1));
 
         log::trace!("Multiplying centered covaiates and b");
-        // TODO This one allocates a new b matrix rather than overwriting the old one
         assert_eq!(centered_covariates.dim(), (nsamples, nvars));
         assert_eq!(b.dim(), (nvars, ntaxa - 1));
-        // TODO do the transpose in the BLAS code!
         centered_covariates_times_b = unsafe { centered_covariates.mmulb(&b).unwrap().transpose() };
         assert_eq!(centered_covariates_times_b.dim(), (ntaxa - 1, nsamples));
 
         log::trace!("Adding...");
-        // TODO last time expected logratios used b0...why not this time?
         assert_eq!(expected_logratios.dim(), centered_covariates_times_b.dim());
         // elementwise addition here!
         for (i, elem) in expected_logratios.data.iter_mut().enumerate() {
@@ -939,7 +916,7 @@ pub fn fit_aitchison<R: Rng>(
     let fitted_z = conversions::to_composition_matrix(&fitted_y, config.base_taxa);
     assert_eq!(fitted_z.dim(), (ntaxa, nsamples));
 
-    let thingy = FitAitchsonResult {
+    let fit_ait_result = FitAitchsonResult {
         base: config.base_taxa,
         beta0,
         beta,
@@ -950,8 +927,7 @@ pub fn fit_aitchison<R: Rng>(
 
     log::trace!("Just finished `fit_aitchison`");
 
-    // TODO rename this!
-    thingy
+    fit_ait_result
 }
 
 #[cfg(test)]
@@ -1044,7 +1020,6 @@ mod tests {
 
         let sample_data = Matrix::from_data(4, 1, vec![1., 1., 0., 0.]).unwrap();
 
-        // TODO when you crank up the em iter and mc iter, this actually seems to get less accurate?
         let config = FitAitchisonConfig {
             em_iter: 6,
             em_burn: 3,
