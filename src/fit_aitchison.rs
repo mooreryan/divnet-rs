@@ -416,8 +416,10 @@ fn mcmat<R: Rng>(
                 Yi.iter_mut().zip(Yi_star).for_each(|(old, new)| *old = new);
             }
 
-            for (taxa_idx, &y_val) in Yi.iter().enumerate() {
-                mc_iter_logratios[mci].set(taxa_idx, sample_idx, y_val);
+            if !in_burn_stage {
+                for (taxa_idx, &y_val) in Yi.iter().enumerate() {
+                    mc_iter_logratios[mci].set(taxa_idx, sample_idx, y_val);
+                }
             }
 
             if true_mci == config.mc_burn {
