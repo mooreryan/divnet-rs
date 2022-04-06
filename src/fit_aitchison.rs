@@ -8,6 +8,7 @@ use blas::dsyrk;
 use rand::distributions::Uniform;
 use rand::Rng;
 use rand_distr::{Distribution, Normal};
+use serde::{Deserialize, Serialize};
 use std::process;
 use std::time::SystemTime;
 
@@ -19,7 +20,7 @@ pub struct FitAitTmp {
     pub sigma: Vec<Matrix>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct FitAitchsonResult {
     pub beta0: Vec<f64>,
     pub fitted_y: Matrix,
