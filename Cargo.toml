@@ -5,7 +5,9 @@ authors = ["Ryan Moore <moorer@udel.com>"]
 edition = "2018"
 
 [profile.release]
-debug = true
+lto = 'thin'
+panic = 'abort'
+codegen-units = 1
 
 [dependencies]
 approx = "0.3.2"
