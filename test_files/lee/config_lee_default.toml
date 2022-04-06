@@ -1,0 +1,17 @@
+[model]
+em_iter = 6
+em_burn = 3
+mc_iter = 500
+mc_burn = 250
+stepsize = 0.01
+perturbation = 0.05
+replicates = 5
+base_taxa = 0
+
+[io]
+count_table = "./test_files/lee/lee_count_table.csv"
+sample_data = "./test_files/lee/lee_sample_data.csv"
+output = "./test_files/lee/lee_divnet_output.csv"
+
+[misc]
+random_seed = 0
