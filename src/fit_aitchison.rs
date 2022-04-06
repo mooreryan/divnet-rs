@@ -552,9 +552,7 @@ unsafe fn sigma_sum_function_dsyrk_aat(
     // let mut c = vec![0.; ldc * n];
     assert_eq!(ldc * n, current_sigma.len());
 
-    // Zero it.
-    current_sigma.iter_mut().for_each(|x| *x = 0.);
-
+    // C := alpha * A * A**T + beta * C
     dsyrk(
         uplo,
         trans,
@@ -681,9 +679,6 @@ fn update_sigma(
     let mut lr_subtraction_tmp =
         Matrix::zeros(expected_logratios.nrows(), expected_logratios.ncols());
     let mut updated_sigma = vec![0.; sigma.nrows() * sigma.ncols()];
-    // TODO pretty sure this is okay, but check the BLAS docs.
-    let mut current_sigma = sigma.data.as_mut_slice();
-    assert_eq!(current_sigma.len(), updated_sigma.len());
 
     for mci in 0..(config.mc_iter - config.mc_burn) {
         let mc_lrs = &mc_iter_logratios[mci];
@@ -695,19 +690,15 @@ fn update_sigma(
                 &mc_lrs,
                 &expected_logratios,
                 &mut lr_subtraction_tmp,
-                &mut current_sigma,
+                // This will be updated each call.
+                &mut updated_sigma,
             )
         };
-
-        updated_sigma
-            .iter_mut()
-            .zip(current_sigma.iter())
-            // TODO do i need to move the division in here for numerical accuracy?  It's slower to do so.
-            .for_each(|(sigma, &current_val)| *sigma += current_val);
     }
 
     log::trace!("`update_sigma` step 2");
 
+    // May need to move this in the loop to get a stable mean.
     updated_sigma
         .iter_mut()
         .for_each(|sigma| *sigma /= (nsamples * (config.mc_iter - config.mc_burn)) as f64);
