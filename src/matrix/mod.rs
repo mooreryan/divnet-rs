@@ -1234,6 +1234,9 @@ impl Matrix {
         let lwork = -1;
         let mut info = 0;
 
+        let alen = a.len();
+        let blen = b.len();
+        log::trace!("before workspace query: trans: {trans}, m: {m}, n: {n}, nrhs: {nrhs}, lda: {lda}, ldb: {ldb}, lwork: {lwork}, info: {info}, alen: {alen}, blen: {blen}");
         // The first call is the workspace query.  It will return with the proper value of lwork.
         dgels(
             trans, m, n, nrhs, &mut a, lda, &mut b, ldb, &mut tmp, lwork, &mut info,
@@ -1245,9 +1248,12 @@ impl Matrix {
                 // It was a success!  Now tmp[0] contains the min value of lwork for optimum
                 // performance.
                 let lwork = tmp[0].round() as i32;
+                let raw_lwork = tmp[0];
+                log::trace!("raw lwork: {:.6}", raw_lwork);
 
                 let mut work = vec![0.; lwork as usize];
 
+                log::trace!("before dgels work: trans: {trans}, m: {m}, n: {n}, nrhs: {nrhs}, lda: {lda}, ldb: {ldb}, lwork: {lwork}, info: {info}, alen: {alen}, blen: {blen}");
                 // Now we actaully run dgels.
                 dgels(
                     trans, m, n, nrhs, &mut a, lda, &mut b, ldb, &mut work, lwork, &mut info,
@@ -1279,6 +1285,7 @@ impl Matrix {
                     Ordering::Less => {
                         // Fail!
                         let msg =
+                        // TODO: sign on info needs to be removed here: "< 0:  if INFO = -i, the i-th argument had an illegal value" (that's from the dgels docs)
                             format!("from dgels: the {}-th parameter had an illegal value", info);
 
                         Err(msg)
