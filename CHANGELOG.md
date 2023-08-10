@@ -2,11 +2,19 @@
 
 ## Unreleased
 
+- Add separate binaries for model fitting and bootstrapping.
+  - Potentially gives approx. linear decrease in runtime with increasing number of cores
+  - Consider this experimental and undocumented
+  - See [issue 4](https://github.com/mooreryan/divnet-rs/issues/4)
+
+# 0.3.0 (2022-04-06)
+
 - Switched from `ChaCha20` to `Pcg64`.  This will change the output as compared to earlier versions even with the same seed.
 - Changed lots of little implementation details.
   - On the Lee dataset with default settings, as compared version `0.2.1` it is...
   - About 3x faster 
   - And uses 60% of the memory 
+- Version tags are no longer prefixed with `v`
 
 ## 0.2.1 (2021-01-22)
 
