@@ -645,7 +645,7 @@ fn get_fitted_y(
     assert_eq!(beta.ncols(), ntaxa - 1);
 
     // TODO do the transpose in the BLAS code!
-    let mut fitted_y = unsafe { centered_covariates.mmulc(&beta).unwrap().transpose() };
+    let mut fitted_y = unsafe { centered_covariates.mmul(&beta).unwrap().transpose() };
 
     assert_eq!(fitted_y.dim(), (ntaxa - 1, nsamples));
     assert_eq!(beta0.len(), ntaxa - 1);
@@ -784,7 +784,7 @@ pub fn fit_aitchison<R: Rng>(
     assert_eq!(centered_covariates.dim(), (nsamples, nvars));
     assert_eq!(b.dim(), (nvars, ntaxa - 1));
     let mut centered_covariates_times_b =
-        unsafe { centered_covariates.mmula(&b).unwrap().transpose() };
+        unsafe { centered_covariates.mmul(&b).unwrap().transpose() };
     assert_eq!(centered_covariates_times_b.dim(), (ntaxa - 1, nsamples));
 
     assert_eq!(expected_logratios.dim(), centered_covariates_times_b.dim());
@@ -870,7 +870,7 @@ pub fn fit_aitchison<R: Rng>(
         log::trace!("Multiplying centered covaiates and b");
         assert_eq!(centered_covariates.dim(), (nsamples, nvars));
         assert_eq!(b.dim(), (nvars, ntaxa - 1));
-        centered_covariates_times_b = unsafe { centered_covariates.mmulb(&b).unwrap().transpose() };
+        centered_covariates_times_b = unsafe { centered_covariates.mmul(&b).unwrap().transpose() };
         assert_eq!(centered_covariates_times_b.dim(), (ntaxa - 1, nsamples));
 
         log::trace!("Adding...");

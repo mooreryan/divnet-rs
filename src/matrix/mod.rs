@@ -234,33 +234,9 @@ impl Matrix {
 }
 
 impl Matrix {
-    // This weird set of duplicated functions with slightly different names are for profiling.  The
-    // different versions are used in different spots to be able to figure out which exact matrix
-    // multiplation is actually taking up the most runtime.
-    //
-    // TODO clean this up...remove in production...need a better way to do this!
-
     // Wrapper when neither is transposed.
     pub unsafe fn mmul(&self, other: &Self) -> Result<Matrix, String> {
         self.mmul2(other, NO_TRANSPOSE, NO_TRANSPOSE)
-    }
-    pub unsafe fn mmula(&self, other: &Self) -> Result<Matrix, String> {
-        self.mmul2_apple(other, NO_TRANSPOSE, NO_TRANSPOSE)
-    }
-    pub unsafe fn mmulb(&self, other: &Self) -> Result<Matrix, String> {
-        self.mmul2_bonky(other, NO_TRANSPOSE, NO_TRANSPOSE)
-    }
-    pub unsafe fn mmulc(&self, other: &Self) -> Result<Matrix, String> {
-        self.mmul2_carlisle(other, NO_TRANSPOSE, NO_TRANSPOSE)
-    }
-    pub unsafe fn mmuld(&self, other: &Self) -> Result<Matrix, String> {
-        self.mmul2_dawn(other, NO_TRANSPOSE, NO_TRANSPOSE)
-    }
-    pub unsafe fn mmule(&self, other: &Self) -> Result<Matrix, String> {
-        self.mmul2_edgy(other, NO_TRANSPOSE, NO_TRANSPOSE)
-    }
-    pub unsafe fn mmulf(&self, other: &Self) -> Result<Matrix, String> {
-        self.mmul2_funzilla(other, NO_TRANSPOSE, NO_TRANSPOSE)
     }
 
     // unsafe {
@@ -374,632 +350,6 @@ impl Matrix {
         Matrix::from_data(c_nrows as usize, c_ncols as usize, mat_c)
     }
 
-    // See the above comment about this string of identical functions with different names.  It's
-    // for profiling but eventually you will need to get rid of them.
-
-    pub unsafe fn mmul2_apple(
-        &self,
-        other: &Matrix,
-        transpose_self: u8,
-        transpose_other: u8,
-    ) -> Result<Matrix, String> {
-        // TODO check if the matrices can be multiplied
-        let transpose_a = transpose_self;
-        let transpose_b = transpose_other;
-        let mat_a = &self.data;
-        let mat_b = &other.data;
-        let alpha = 1.;
-        let beta = 1.;
-
-        // m is nrows of Op(A) and nrows matrix C
-        let m = if transpose_self == TRANSPOSE {
-            // We're transposing self aka the a matrix
-            self.ncols as i32
-        } else {
-            self.nrows as i32
-        };
-
-        // n is ncols of Op(b) and ncols of matrix c
-        let n = if transpose_other == TRANSPOSE {
-            other.nrows as i32
-        } else {
-            other.ncols as i32
-        };
-
-        // k is ncols of op(A), and nrows of op(B)
-        let k = if transpose_self == TRANSPOSE && transpose_other == TRANSPOSE {
-            let ncols_op_a = self.nrows; // cos it's transposed
-            let nrows_op_b = other.ncols; // cos it's transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else if transpose_self == TRANSPOSE {
-            let ncols_op_a = self.nrows; // cos it's transposed
-            let nrows_op_b = other.nrows; // cos it's NOT transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else if transpose_other == TRANSPOSE {
-            let ncols_op_a = self.ncols; // cos it's NOT transposed
-            let nrows_op_b = other.ncols; // cos it's transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else {
-            let ncols_op_a = self.ncols; // cos it's NOT transposed
-            let nrows_op_b = other.nrows; // cos it's NOT transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        };
-
-        let c_nrows = m;
-        let c_ncols = n;
-
-        let mut mat_c = vec![0.; (c_nrows * c_ncols) as usize];
-
-        let lda = if transpose_self == NO_TRANSPOSE {
-            self.nrows as i32
-        } else {
-            self.ncols as i32
-        };
-
-        let ldb = if transpose_other == NO_TRANSPOSE {
-            other.nrows as i32
-        } else {
-            other.ncols as i32
-        };
-
-        let ldc = if transpose_self == NO_TRANSPOSE {
-            self.nrows as i32
-        } else {
-            self.ncols as i32
-        };
-
-        // let lda = self.nrows as i32;
-        // let ldb = other.nrows as i32;
-        // let ldc = self.nrows as i32;
-
-        // DGEMM: C = alpha * op(A) * op(B) + beta * C.  Note: C gets overwritten with this.
-
-        dgemm(
-            transpose_a,
-            transpose_b,
-            m,
-            n,
-            k,
-            alpha,
-            mat_a,
-            lda,
-            mat_b,
-            ldb,
-            beta,
-            &mut mat_c,
-            ldc,
-        );
-
-        Matrix::from_data(c_nrows as usize, c_ncols as usize, mat_c)
-    }
-
-    pub unsafe fn mmul2_bonky(
-        &self,
-        other: &Matrix,
-        transpose_self: u8,
-        transpose_other: u8,
-    ) -> Result<Matrix, String> {
-        // TODO check if the matrices can be multiplied
-        let transpose_a = transpose_self;
-        let transpose_b = transpose_other;
-        let mat_a = &self.data;
-        let mat_b = &other.data;
-        let alpha = 1.;
-        let beta = 1.;
-
-        // m is nrows of Op(A) and nrows matrix C
-        let m = if transpose_self == TRANSPOSE {
-            // We're transposing self aka the a matrix
-            self.ncols as i32
-        } else {
-            self.nrows as i32
-        };
-
-        // n is ncols of Op(b) and ncols of matrix c
-        let n = if transpose_other == TRANSPOSE {
-            other.nrows as i32
-        } else {
-            other.ncols as i32
-        };
-
-        // k is ncols of op(A), and nrows of op(B)
-        let k = if transpose_self == TRANSPOSE && transpose_other == TRANSPOSE {
-            let ncols_op_a = self.nrows; // cos it's transposed
-            let nrows_op_b = other.ncols; // cos it's transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else if transpose_self == TRANSPOSE {
-            let ncols_op_a = self.nrows; // cos it's transposed
-            let nrows_op_b = other.nrows; // cos it's NOT transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else if transpose_other == TRANSPOSE {
-            let ncols_op_a = self.ncols; // cos it's NOT transposed
-            let nrows_op_b = other.ncols; // cos it's transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else {
-            let ncols_op_a = self.ncols; // cos it's NOT transposed
-            let nrows_op_b = other.nrows; // cos it's NOT transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        };
-
-        let c_nrows = m;
-        let c_ncols = n;
-
-        let mut mat_c = vec![0.; (c_nrows * c_ncols) as usize];
-
-        let lda = if transpose_self == NO_TRANSPOSE {
-            self.nrows as i32
-        } else {
-            self.ncols as i32
-        };
-
-        let ldb = if transpose_other == NO_TRANSPOSE {
-            other.nrows as i32
-        } else {
-            other.ncols as i32
-        };
-
-        let ldc = if transpose_self == NO_TRANSPOSE {
-            self.nrows as i32
-        } else {
-            self.ncols as i32
-        };
-
-        // let lda = self.nrows as i32;
-        // let ldb = other.nrows as i32;
-        // let ldc = self.nrows as i32;
-
-        // DGEMM: C = alpha * op(A) * op(B) + beta * C.  Note: C gets overwritten with this.
-
-        dgemm(
-            transpose_a,
-            transpose_b,
-            m,
-            n,
-            k,
-            alpha,
-            mat_a,
-            lda,
-            mat_b,
-            ldb,
-            beta,
-            &mut mat_c,
-            ldc,
-        );
-
-        Matrix::from_data(c_nrows as usize, c_ncols as usize, mat_c)
-    }
-
-    pub unsafe fn mmul2_carlisle(
-        &self,
-        other: &Matrix,
-        transpose_self: u8,
-        transpose_other: u8,
-    ) -> Result<Matrix, String> {
-        // TODO check if the matrices can be multiplied
-        let transpose_a = transpose_self;
-        let transpose_b = transpose_other;
-        let mat_a = &self.data;
-        let mat_b = &other.data;
-        let alpha = 1.;
-        let beta = 1.;
-
-        // m is nrows of Op(A) and nrows matrix C
-        let m = if transpose_self == TRANSPOSE {
-            // We're transposing self aka the a matrix
-            self.ncols as i32
-        } else {
-            self.nrows as i32
-        };
-
-        // n is ncols of Op(b) and ncols of matrix c
-        let n = if transpose_other == TRANSPOSE {
-            other.nrows as i32
-        } else {
-            other.ncols as i32
-        };
-
-        // k is ncols of op(A), and nrows of op(B)
-        let k = if transpose_self == TRANSPOSE && transpose_other == TRANSPOSE {
-            let ncols_op_a = self.nrows; // cos it's transposed
-            let nrows_op_b = other.ncols; // cos it's transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else if transpose_self == TRANSPOSE {
-            let ncols_op_a = self.nrows; // cos it's transposed
-            let nrows_op_b = other.nrows; // cos it's NOT transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else if transpose_other == TRANSPOSE {
-            let ncols_op_a = self.ncols; // cos it's NOT transposed
-            let nrows_op_b = other.ncols; // cos it's transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else {
-            let ncols_op_a = self.ncols; // cos it's NOT transposed
-            let nrows_op_b = other.nrows; // cos it's NOT transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        };
-
-        let c_nrows = m;
-        let c_ncols = n;
-
-        let mut mat_c = vec![0.; (c_nrows * c_ncols) as usize];
-
-        let lda = if transpose_self == NO_TRANSPOSE {
-            self.nrows as i32
-        } else {
-            self.ncols as i32
-        };
-
-        let ldb = if transpose_other == NO_TRANSPOSE {
-            other.nrows as i32
-        } else {
-            other.ncols as i32
-        };
-
-        let ldc = if transpose_self == NO_TRANSPOSE {
-            self.nrows as i32
-        } else {
-            self.ncols as i32
-        };
-
-        // let lda = self.nrows as i32;
-        // let ldb = other.nrows as i32;
-        // let ldc = self.nrows as i32;
-
-        // DGEMM: C = alpha * op(A) * op(B) + beta * C.  Note: C gets overwritten with this.
-
-        dgemm(
-            transpose_a,
-            transpose_b,
-            m,
-            n,
-            k,
-            alpha,
-            mat_a,
-            lda,
-            mat_b,
-            ldb,
-            beta,
-            &mut mat_c,
-            ldc,
-        );
-
-        Matrix::from_data(c_nrows as usize, c_ncols as usize, mat_c)
-    }
-
-    pub unsafe fn mmul2_dawn(
-        &self,
-        other: &Matrix,
-        transpose_self: u8,
-        transpose_other: u8,
-    ) -> Result<Matrix, String> {
-        // TODO check if the matrices can be multiplied
-        let transpose_a = transpose_self;
-        let transpose_b = transpose_other;
-        let mat_a = &self.data;
-        let mat_b = &other.data;
-        let alpha = 1.;
-        let beta = 1.;
-
-        // m is nrows of Op(A) and nrows matrix C
-        let m = if transpose_self == TRANSPOSE {
-            // We're transposing self aka the a matrix
-            self.ncols as i32
-        } else {
-            self.nrows as i32
-        };
-
-        // n is ncols of Op(b) and ncols of matrix c
-        let n = if transpose_other == TRANSPOSE {
-            other.nrows as i32
-        } else {
-            other.ncols as i32
-        };
-
-        // k is ncols of op(A), and nrows of op(B)
-        let k = if transpose_self == TRANSPOSE && transpose_other == TRANSPOSE {
-            let ncols_op_a = self.nrows; // cos it's transposed
-            let nrows_op_b = other.ncols; // cos it's transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else if transpose_self == TRANSPOSE {
-            let ncols_op_a = self.nrows; // cos it's transposed
-            let nrows_op_b = other.nrows; // cos it's NOT transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else if transpose_other == TRANSPOSE {
-            let ncols_op_a = self.ncols; // cos it's NOT transposed
-            let nrows_op_b = other.ncols; // cos it's transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else {
-            let ncols_op_a = self.ncols; // cos it's NOT transposed
-            let nrows_op_b = other.nrows; // cos it's NOT transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        };
-
-        let c_nrows = m;
-        let c_ncols = n;
-
-        let mut mat_c = vec![0.; (c_nrows * c_ncols) as usize];
-
-        let lda = if transpose_self == NO_TRANSPOSE {
-            self.nrows as i32
-        } else {
-            self.ncols as i32
-        };
-
-        let ldb = if transpose_other == NO_TRANSPOSE {
-            other.nrows as i32
-        } else {
-            other.ncols as i32
-        };
-
-        let ldc = if transpose_self == NO_TRANSPOSE {
-            self.nrows as i32
-        } else {
-            self.ncols as i32
-        };
-
-        // let lda = self.nrows as i32;
-        // let ldb = other.nrows as i32;
-        // let ldc = self.nrows as i32;
-
-        // DGEMM: C = alpha * op(A) * op(B) + beta * C.  Note: C gets overwritten with this.
-
-        dgemm(
-            transpose_a,
-            transpose_b,
-            m,
-            n,
-            k,
-            alpha,
-            mat_a,
-            lda,
-            mat_b,
-            ldb,
-            beta,
-            &mut mat_c,
-            ldc,
-        );
-
-        Matrix::from_data(c_nrows as usize, c_ncols as usize, mat_c)
-    }
-
-    pub unsafe fn mmul2_edgy(
-        &self,
-        other: &Matrix,
-        transpose_self: u8,
-        transpose_other: u8,
-    ) -> Result<Matrix, String> {
-        // TODO check if the matrices can be multiplied
-        let transpose_a = transpose_self;
-        let transpose_b = transpose_other;
-        let mat_a = &self.data;
-        let mat_b = &other.data;
-        let alpha = 1.;
-        let beta = 1.;
-
-        // m is nrows of Op(A) and nrows matrix C
-        let m = if transpose_self == TRANSPOSE {
-            // We're transposing self aka the a matrix
-            self.ncols as i32
-        } else {
-            self.nrows as i32
-        };
-
-        // n is ncols of Op(b) and ncols of matrix c
-        let n = if transpose_other == TRANSPOSE {
-            other.nrows as i32
-        } else {
-            other.ncols as i32
-        };
-
-        // k is ncols of op(A), and nrows of op(B)
-        let k = if transpose_self == TRANSPOSE && transpose_other == TRANSPOSE {
-            let ncols_op_a = self.nrows; // cos it's transposed
-            let nrows_op_b = other.ncols; // cos it's transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else if transpose_self == TRANSPOSE {
-            let ncols_op_a = self.nrows; // cos it's transposed
-            let nrows_op_b = other.nrows; // cos it's NOT transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else if transpose_other == TRANSPOSE {
-            let ncols_op_a = self.ncols; // cos it's NOT transposed
-            let nrows_op_b = other.ncols; // cos it's transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else {
-            let ncols_op_a = self.ncols; // cos it's NOT transposed
-            let nrows_op_b = other.nrows; // cos it's NOT transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        };
-
-        let c_nrows = m;
-        let c_ncols = n;
-
-        let mut mat_c = vec![0.; (c_nrows * c_ncols) as usize];
-
-        let lda = if transpose_self == NO_TRANSPOSE {
-            self.nrows as i32
-        } else {
-            self.ncols as i32
-        };
-
-        let ldb = if transpose_other == NO_TRANSPOSE {
-            other.nrows as i32
-        } else {
-            other.ncols as i32
-        };
-
-        let ldc = if transpose_self == NO_TRANSPOSE {
-            self.nrows as i32
-        } else {
-            self.ncols as i32
-        };
-
-        // let lda = self.nrows as i32;
-        // let ldb = other.nrows as i32;
-        // let ldc = self.nrows as i32;
-
-        // DGEMM: C = alpha * op(A) * op(B) + beta * C.  Note: C gets overwritten with this.
-
-        dgemm(
-            transpose_a,
-            transpose_b,
-            m,
-            n,
-            k,
-            alpha,
-            mat_a,
-            lda,
-            mat_b,
-            ldb,
-            beta,
-            &mut mat_c,
-            ldc,
-        );
-
-        Matrix::from_data(c_nrows as usize, c_ncols as usize, mat_c)
-    }
-
-    pub unsafe fn mmul2_funzilla(
-        &self,
-        other: &Matrix,
-        transpose_self: u8,
-        transpose_other: u8,
-    ) -> Result<Matrix, String> {
-        // TODO check if the matrices can be multiplied
-        let transpose_a = transpose_self;
-        let transpose_b = transpose_other;
-        let mat_a = &self.data;
-        let mat_b = &other.data;
-        let alpha = 1.;
-        let beta = 1.;
-
-        // m is nrows of Op(A) and nrows matrix C
-        let m = if transpose_self == TRANSPOSE {
-            // We're transposing self aka the a matrix
-            self.ncols as i32
-        } else {
-            self.nrows as i32
-        };
-
-        // n is ncols of Op(b) and ncols of matrix c
-        let n = if transpose_other == TRANSPOSE {
-            other.nrows as i32
-        } else {
-            other.ncols as i32
-        };
-
-        // k is ncols of op(A), and nrows of op(B)
-        let k = if transpose_self == TRANSPOSE && transpose_other == TRANSPOSE {
-            let ncols_op_a = self.nrows; // cos it's transposed
-            let nrows_op_b = other.ncols; // cos it's transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else if transpose_self == TRANSPOSE {
-            let ncols_op_a = self.nrows; // cos it's transposed
-            let nrows_op_b = other.nrows; // cos it's NOT transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else if transpose_other == TRANSPOSE {
-            let ncols_op_a = self.ncols; // cos it's NOT transposed
-            let nrows_op_b = other.ncols; // cos it's transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        } else {
-            let ncols_op_a = self.ncols; // cos it's NOT transposed
-            let nrows_op_b = other.nrows; // cos it's NOT transposed
-            assert_eq!(ncols_op_a, nrows_op_b);
-
-            ncols_op_a as i32
-        };
-
-        let c_nrows = m;
-        let c_ncols = n;
-
-        let mut mat_c = vec![0.; (c_nrows * c_ncols) as usize];
-
-        let lda = if transpose_self == NO_TRANSPOSE {
-            self.nrows as i32
-        } else {
-            self.ncols as i32
-        };
-
-        let ldb = if transpose_other == NO_TRANSPOSE {
-            other.nrows as i32
-        } else {
-            other.ncols as i32
-        };
-
-        let ldc = if transpose_self == NO_TRANSPOSE {
-            self.nrows as i32
-        } else {
-            self.ncols as i32
-        };
-
-        // let lda = self.nrows as i32;
-        // let ldb = other.nrows as i32;
-        // let ldc = self.nrows as i32;
-
-        // DGEMM: C = alpha * op(A) * op(B) + beta * C.  Note: C gets overwritten with this.
-
-        dgemm(
-            transpose_a,
-            transpose_b,
-            m,
-            n,
-            k,
-            alpha,
-            mat_a,
-            lda,
-            mat_b,
-            ldb,
-            beta,
-            &mut mat_c,
-            ldc,
-        );
-
-        Matrix::from_data(c_nrows as usize, c_ncols as usize, mat_c)
-    }
 
     // > m <- matrix(c(10, 1, 1, 10), 2)
     // > m
@@ -1095,7 +445,7 @@ impl Matrix {
 
             // holds total number of eigen values found
             let mut m = -1; // this should be n after running since range is 'A'
-                            // Stores eigenvalues in ascending order
+            // Stores eigenvalues in ascending order
             let mut w = vec![-1.; n as usize];
             // TODO describe this
             // dim will end up being (ldz, m) but m should be 'n' because range is 'A'
@@ -1482,7 +832,7 @@ mod tests {
                 1., 2., 3., 10., 20., 30., 100., 200., 300., 1000., 2000., 3000.,
             ],
         )
-        .unwrap()
+            .unwrap()
     }
 
     fn make_small_matrix() -> Matrix {
@@ -1626,13 +976,13 @@ mod tests {
             3,
             vec![1., 2., 3., 4., 5., 1., 3., 5., 2., 4., 1., 4., 2., 5., 3.],
         )
-        .unwrap();
+            .unwrap();
         let b = Matrix::from_data(
             5,
             2,
             vec![-10., 12., 14., 16., 18., -3., 14., 12., 16., 16.],
         )
-        .unwrap();
+            .unwrap();
 
         let expected = Matrix::from_data(3, 2, vec![2., 1., 1., 1., 1., 2.]).unwrap();
 
@@ -1649,7 +999,7 @@ mod tests {
             3,
             vec![0.69, -0.04, 1.27, -0.04, 0.19, -0.33, 1.27, -0.33, 3.12],
         )
-        .unwrap();
+            .unwrap();
 
         let actual = unsafe { a.eigen().unwrap() };
         // TODO this may fail as it can also be *-1.
@@ -1673,7 +1023,7 @@ mod tests {
                     0.91671962,
                 ],
             )
-            .unwrap(),
+                .unwrap(),
         };
 
         let opposite_expected_values = EigenOutput {
@@ -1685,8 +1035,8 @@ mod tests {
         assert!(
             actual.vectors.approx_eq(&expected.vectors, TOL)
                 || actual
-                    .vectors
-                    .approx_eq(&opposite_expected_values.vectors, TOL)
+                .vectors
+                .approx_eq(&opposite_expected_values.vectors, TOL)
         );
 
         approx::assert_abs_diff_eq!(&actual.values[..], &expected.values[..], epsilon = TOL);
@@ -1724,7 +1074,7 @@ mod tests {
                 -1., 0., 1., -10., 0., 10., -100., 0., 100., -1000., 0., 1000.,
             ],
         )
-        .unwrap();
+            .unwrap();
 
         let actual = a.center(true);
 
@@ -1794,7 +1144,7 @@ mod tests {
             3,
             vec![4.5, -1.5, 79.5, -1.5, 0.5, -26.5, 79.5, -26.5, 1404.5],
         )
-        .unwrap();
+            .unwrap();
 
         approx::assert_abs_diff_eq!(actual.data(), expected.data(), epsilon = TOL);
     }
