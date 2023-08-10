@@ -10,6 +10,25 @@ Please see the [GitHub repository for the reference implementation](https://gith
 
 For installation and usage instructions, please see the [divnet-rs book](https://mooreryan.github.io/divnet-rs-book/).
 
+### Default branch is now main
+
+The default branch is now `main`, and the `master` branch no longer exists.
+
+If you have a local clone using `master` as the default branch, you can update it by running the following commands.
+
+```
+git branch -m master main
+git fetch origin
+git branch -u origin/main main
+git remote set-head origin -a
+```
+
+Optionally, run the following command to remove tracking references to the old branch name.
+
+```
+git remote prune origin
+```
+
 ## Citation
 
 If you use DivNet, please support the authors and [cite their manuscript](https://doi.org/10.1093/biostatistics/kxaa015)!
